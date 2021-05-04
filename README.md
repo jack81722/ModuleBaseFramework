@@ -6,7 +6,9 @@ Module-based framework of Unity
 ```csharp
 public class UniGameCore : MonoBehaviour, IGameCore {
     private IGameCore _core;
+    
     ...
+    
     private void Awake() {
         _core.InitiailzeModules();
     }
