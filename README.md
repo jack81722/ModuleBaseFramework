@@ -49,6 +49,35 @@ public class WeatherModule : MonoBehaviour, IGameModule {
 ```
 
 # Fungus Plugin
+**前置需求** <br/>
+0. 使用前請先安裝Fungus (Git連結：https://github.com/snozbot/fungus)
+1. 在Fungus.Command類別中加入方法 (此修改會將GenericCmd選擇的方法顯示在FlowChart內的Block的CommandList中，不修改也可以)
+```
+public virtual string CommandName() {
+    return null;
+}
+```
+3. 修改CommandListAdaptor (此修改會將GenericCmd選擇的方法顯示在FlowChart內的Block的CommandList中，不修改也可以)
+```csharp
+public class CommandListAdaptor{
+    ...
+    public void DrawItem(Rect position, int index, bool selected, bool focused) {
+    ...
+            // 原本的程式碼
+            // commandName = commandInfoAttr.CommandName;
+            
+            // 改成
+            string commandName = null;
+            if (command != null)
+                commandName = command.CommandName();
+            if (string.IsNullOrEmpty(commandName)) {
+                commandName = commandInfoAttr.CommandName;
+            }
+    ...
+    }
+}
+```
+
 **GenericCmd** <br/>
 繼承自Fungus的Command，每個需要指令化的模組都必須宣告新Class並繼承。
 ```csharp
