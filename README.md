@@ -16,6 +16,7 @@ public class UniGameCore : MonoBehaviour, IGameCore {
     }
 }
 ```
+
 **GameModule** <br/>
 遊戲模組，將集中初始化於GameCore，所有遊戲邏輯都由Module處理和管理。
 ```csharp
@@ -86,4 +87,13 @@ public class WeatherModule : MonoBehaviour, IGameModule {
 }
 ```
 
+# Quick Start
+1. 建立UniGameCore物件至Hierarchy，並在其物件底下建立其他模組。
+![image](https://user-images.githubusercontent.com/34429337/117030784-8cf88780-ad32-11eb-9288-8a2dc4767863.png)
 
+2. 實作FungusPlugin後即可在Fungus內進行編輯。
+![image](https://user-images.githubusercontent.com/34429337/117031112-da74f480-ad32-11eb-8f15-c022d03689aa.png)
+
+
+# Future Feature
+1. ModuleCmd可以執行帶參數的方法，並於Fungus編輯時指定參數。
