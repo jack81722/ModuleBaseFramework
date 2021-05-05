@@ -16,11 +16,22 @@ namespace ModuleBased.FungusPlugin {
         [SerializeField]
         private string CmdName;
 
+        private IEnumerator _enumerator;
+
         private void Start() {
             if (module == null) {
                 module = UniGameCore.Singleton.GetModule<TMod>();
             }
             methods = ModuleCmdCache<TMod>.GetMethods();
+        }
+
+        private void Update() {
+            if(_enumerator != null) {
+                if (!_enumerator.MoveNext()) {
+                    Continue();
+                    _enumerator = null;
+                }   
+            }
         }
 
         public override void Execute() {
@@ -31,7 +42,11 @@ namespace ModuleBased.FungusPlugin {
                 // check if cmd name is in dictionary
                 if (methods.TryGetValue(CmdName, out MethodInfo method)) {
                     try {
-                        method.Invoke(module, new object[0]);
+                        if(method.ReturnType == typeof(void))
+                            method.Invoke(module, new object[0]);
+                        else if(typeof(IEnumerator).IsAssignableFrom(method.ReturnType)) {
+                            _enumerator = method.Invoke(module, new object[0]) as IEnumerator;
+                        }
                     }
                     catch (Exception e) {
                         Debug.LogError(e);
@@ -40,7 +55,8 @@ namespace ModuleBased.FungusPlugin {
                     Debug.LogWarning("Command not found, skip the command.");
                 }
             }
-            Continue();
+            if(_enumerator == null)
+                Continue();
         }
 
         #region -- Editor cache --

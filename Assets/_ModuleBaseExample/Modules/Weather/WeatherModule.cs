@@ -8,6 +8,8 @@ namespace ModuleBased.Example {
     public class WeatherModule : MonoBehaviour, IGameModule {
         public EWeatherState WeatherState;
 
+        public ParticleSystem RainEffect;
+
         public delegate void SetWeatherHandler();
         [ModuleEvent]
         public event SetWeatherHandler OnSetWeather;
@@ -54,6 +56,7 @@ namespace ModuleBased.Example {
         [ModuleCmd]
         public void SetRain() {
             SetWeather(EWeatherState.Rain);
+            RainEffect.Play();
         }
 
         [ModuleCmd]
