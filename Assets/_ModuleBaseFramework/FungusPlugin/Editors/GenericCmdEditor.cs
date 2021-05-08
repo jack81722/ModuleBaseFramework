@@ -10,10 +10,24 @@ using System;
 
 namespace ModuleBased.FungusPlugin.Editor {
     public class GenericCmdEditor<TMod> : CommandEditor where TMod : IGameModule {
+        /// <summary>
+        /// Dictionary of command name and method information
+        /// </summary>
         private IDictionary<string, MethodInfo> _methods;
+
+        /// <summary>
+        /// Selection of command name
+        /// </summary>
         private SerializedProperty _cmdNameProp;
+
+        /// <summary>
+        /// List of command parameters
+        /// </summary>
         private SerializedProperty _cmdParamProp;
 
+        /// <summary>
+        /// List of command name
+        /// </summary>
         private string[] _cmdList;
 
         public override void OnEnable() {
@@ -25,6 +39,7 @@ namespace ModuleBased.FungusPlugin.Editor {
             _cmdList = _methods.Keys.ToArray();
         }
 
+        #region -- Draw methods --
         public override void DrawCommandGUI() {
             if (_methods.Count > 0) {
                 bool diff = DrawCmdPopup(out string cmdName);
@@ -91,6 +106,7 @@ namespace ModuleBased.FungusPlugin.Editor {
             string label = char.ToUpper(param.Name[0]) + param.Name.Substring(1);
             prop.stringValue = EditorGUILayout.TextField(label, prop.stringValue);
         }
+        #endregion
 
         private string GetDefaultParameter(Type type) {
             if (type == typeof(string))
