@@ -3,6 +3,7 @@ using ModuleBased.ForUnity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
 
@@ -13,8 +14,10 @@ namespace ModuleBased.FungusPlugin {
         private static TMod module;
         private static IDictionary<string, MethodInfo> methods;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private string CmdName;
+        [SerializeField, HideInInspector]
+        private string[] CmdParams;
 
         private void Start() {
             if (module == null) {
@@ -27,20 +30,44 @@ namespace ModuleBased.FungusPlugin {
             // check if cmd name is null or empty
             if (string.IsNullOrEmpty(CmdName)) {
                 Debug.LogWarning("Command name is null, skip the command.");
-            } else {
+            }
+            else {
                 // check if cmd name is in dictionary
                 if (methods.TryGetValue(CmdName, out MethodInfo method)) {
                     try {
-                        method.Invoke(module, new object[0]);
+                        method.Invoke(module, GetParameterValues(method.GetParameters(), CmdParams));
                     }
                     catch (Exception e) {
                         Debug.LogError(e);
                     }
-                } else {
+                }
+                else {
                     Debug.LogWarning("Command not found, skip the command.");
                 }
             }
             Continue();
+        }
+
+        private object[] GetParameterValues(ParameterInfo[] paramInfos, string[] valStrs) {
+            object[] values = new object[paramInfos.Length];
+            for (int i = 0; i < paramInfos.Length; i++) {
+                if (paramInfos[i].ParameterType.IsEnum) {
+                    values[i] = ParseEnum(paramInfos[i].ParameterType, valStrs[i]);
+                }
+                else {
+                    values[i] = ParseParameter(paramInfos[i].ParameterType, valStrs[i]);
+                }
+            }
+            return values;
+        }
+
+        private object ParseEnum(Type type, string valStr) {
+            return Enum.Parse(type, valStr);
+        }
+
+        private object ParseParameter(Type type, string valStr) {
+            var converter = TypeDescriptor.GetConverter(type);
+            return converter.ConvertFromInvariantString(valStr);
         }
 
         #region -- Editor cache --

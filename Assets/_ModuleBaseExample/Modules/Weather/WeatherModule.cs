@@ -40,6 +40,7 @@ namespace ModuleBased.Example {
         #endregion
 
         #region -- Cmds --
+        [ModuleCmd]
         public void SetWeather(EWeatherState state) {
             WeatherState = state;
             Debug.Log($"Set weather : {state}");
