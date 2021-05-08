@@ -19,11 +19,22 @@ namespace ModuleBased.FungusPlugin {
         [SerializeField, HideInInspector]
         private string[] CmdParams;
 
+        private IEnumerator _enumerator;
+
         private void Start() {
             if (module == null) {
                 module = UniGameCore.Singleton.GetModule<TMod>();
             }
             methods = ModuleCmdCache<TMod>.GetMethods();
+        }
+
+        private void Update() {
+            if(_enumerator != null) {
+                if (!_enumerator.MoveNext()) {
+                    Continue();
+                    _enumerator = null;
+                }   
+            }
         }
 
         public override void Execute() {
@@ -35,7 +46,11 @@ namespace ModuleBased.FungusPlugin {
                 // check if cmd name is in dictionary
                 if (methods.TryGetValue(CmdName, out MethodInfo method)) {
                     try {
-                        method.Invoke(module, GetParameterValues(method.GetParameters(), CmdParams));
+                        if(method.ReturnType == typeof(void))
+                            method.Invoke(module, GetParameterValues(method.GetParameters(), CmdParams));
+                        else if(typeof(IEnumerator).IsAssignableFrom(method.ReturnType)) {
+                            _enumerator = method.Invoke(module, GetParameterValues(method.GetParameters(), CmdParams)) as IEnumerator;
+                        }
                     }
                     catch (Exception e) {
                         Debug.LogError(e);
@@ -45,7 +60,8 @@ namespace ModuleBased.FungusPlugin {
                     Debug.LogWarning("Command not found, skip the command.");
                 }
             }
-            Continue();
+            if(_enumerator == null)
+                Continue();
         }
 
         private object[] GetParameterValues(ParameterInfo[] paramInfos, string[] valStrs) {
