@@ -42,9 +42,12 @@ namespace ModuleBased.Example {
         #endregion
 
         #region -- Cmds --
+        [ModuleCmd]
         public void SetWeather(EWeatherState state) {
             WeatherState = state;
             Debug.Log($"Set weather : {state}");
+            if (state == EWeatherState.Rain)
+                RainEffect.Play();
         }
 
         [ModuleCmd]
@@ -56,7 +59,7 @@ namespace ModuleBased.Example {
         [ModuleCmd]
         public void SetRain() {
             SetWeather(EWeatherState.Rain);
-            RainEffect.Play();
+            //RainEffect.Play();
         }
 
         [ModuleCmd]

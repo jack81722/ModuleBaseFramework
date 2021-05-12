@@ -26,13 +26,15 @@ namespace ModuleBased.Example {
         #region -- Cmds --
 
         [ModuleCmd]
-        public IEnumerator MoveAToDestination() {
+        public IEnumerator MoveAToDestination(float x, float time = 1) {
             float t = 0;
             Vector3 p = _a.transform.position;
-            while (t < 1) {
+            float from = p.x;
+            while (t < time) {
                 float delta = Time.deltaTime;
                 t += delta;
-                p.x = t;
+                float r = Mathf.Clamp01(t / time);
+                p.x = x * t + (1 - t) * from;
                 _a.transform.position = p;
                 yield return null;
             }
@@ -49,7 +51,7 @@ namespace ModuleBased.Example {
 
     public interface ICharacterModule {
         [ModuleCmd]
-        IEnumerator MoveAToDestination();
+        IEnumerator MoveAToDestination(float x, float time = 1);
 
         [ModuleCmd]
         void MoveBToDestination();
