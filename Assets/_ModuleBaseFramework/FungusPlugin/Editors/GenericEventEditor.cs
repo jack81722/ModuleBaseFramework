@@ -9,12 +9,12 @@ using UnityEditor;
 using UnityEngine;
 
 namespace ModuleBased.FungusPlugin.Editor {
-    public abstract class GenericEventEditor<TMod> : EventHandlerEditor where TMod : IGameModule {
+    public abstract class GenericEventEditor<TItf> : EventHandlerEditor where TItf : class {
         private IDictionary<string, EventInfo> _events;
         private SerializedProperty _eventNameProp;
 
         private void OnEnable() {
-            _events = ModuleEventCache<TMod>.GetEvents();
+            _events = ModuleEventCache<TItf>.GetEvents();
         }
 
         protected override void DrawProperties() {

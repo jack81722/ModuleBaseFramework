@@ -1,10 +1,12 @@
-﻿using ModuleBased.FungusPlugin;
+﻿using ModuleBased.ForUnity;
+using ModuleBased.FungusPlugin;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModuleBased.Example {
-    public class CharacterModule : MonoBehaviour, IGameModule {
+    [ModuleItf(typeof(ICharacterModule))]
+    public class CharacterModule : MonoBehaviour, IGameModule, ICharacterModule {
 
         [SerializeField]
         private GameObject _a;
@@ -43,6 +45,13 @@ namespace ModuleBased.Example {
 
         }
         #endregion
+    }
 
+    public interface ICharacterModule {
+        [ModuleCmd]
+        IEnumerator MoveAToDestination();
+
+        [ModuleCmd]
+        void MoveBToDestination();
     }
 }

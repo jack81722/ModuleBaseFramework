@@ -4,21 +4,21 @@ using System.Collections.Generic;
 
 namespace ModuleBased {
     public interface IGameCore {
-        IGameModule AddModule(Type type);
+        IGameModule AddModule(Type itfType, Type instType);
 
-        void AddModule(IGameModule module);
+        void AddModule(Type itfType, IGameModule mod);
 
-        TMod AddModule<TMod>() where TMod : IGameModule;
+        TItf AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf;
 
-        void AddModule<TMod>(TMod mod) where TMod : IGameModule;
+        void AddModule<TItf>(IGameModule mod) where TItf : class;
 
-        IGameModule GetModule(Type type, bool inherit = false);
+        IGameModule GetModule(Type interfaceType);
 
-        TMod GetModule<TMod>(bool inherit = false) where TMod : IGameModule;
+        TItf GetModule<TItf>() where TItf : class;
 
-        bool TryGetModule<TMod>(out TMod mod, bool inherit = false) where TMod : IGameModule;
+        bool TryGetModule<TItf>(out TItf mod) where TItf : class;
 
-        bool TryGetModule(Type modType, out IGameModule mod, bool inherit = false);
+        bool TryGetModule(Type itfType, out IGameModule mod);
 
         void InitializeModules();
 

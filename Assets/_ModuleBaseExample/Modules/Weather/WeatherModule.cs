@@ -1,11 +1,11 @@
-﻿using ModuleBased.FungusPlugin;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using ModuleBased.AOP.Attributes;
+using ModuleBased.ForUnity;
+using ModuleBased.FungusPlugin;
 using UnityEngine;
 
 namespace ModuleBased.Example {
-    public class WeatherModule : MonoBehaviour, IGameModule {
+    [ModuleItf(typeof(IWeatherModule))]
+    public class WeatherModule : MonoBehaviour, IGameModule, IWeatherModule {
         public EWeatherState WeatherState;
 
         public ParticleSystem RainEffect;
@@ -77,5 +77,23 @@ namespace ModuleBased.Example {
         Rain = 1,
         Cloudy = 2,
         Windy = 3
+    }
+
+    public interface IWeatherModule {
+        [ModuleCmd]
+        void SetWeather(EWeatherState state);
+
+        [SimpleLog]
+        [ModuleCmd]
+        void SetRain();
+
+        [ModuleCmd]
+        void SetSunny();
+
+        [ModuleCmd]
+        void SetCloudy();
+
+        [ModuleCmd]
+        void SetWindy();
     }
 }

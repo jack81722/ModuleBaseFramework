@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using ModuleBased.AOP;
+using ModuleBased.AOP.Factories;
+using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace ModuleBased.ForUnity {
@@ -28,18 +28,33 @@ namespace ModuleBased.ForUnity {
         private IGameCore _core;
 
         private void Awake() {
+            InitializeSingleton();
+            InitializeCore();
+            AddAndInitializeModules();
+        }
+        private void InitializeSingleton() {
             // singleton
             if (_singleton == null)
                 _singleton = this;
-            if(_singleton != this) {
+            if (_singleton != this) {
                 Destroy(gameObject);
             }
-            // initialize
+        }
+
+        private void InitializeCore() {
+            // initialize core
             ILogger logger = new UniLogger();
-            _core = new GameCore(logger);
+            IModuleProxyFactory proxyFactory = new NoneModuleProxyFactory();
+            _core = new GameCore(logger, proxyFactory);
+        }
+
+        private void AddAndInitializeModules() {
+            // add modules
             IGameModule[] modules = GetComponentsInChildren<IGameModule>();
-            foreach(var module in modules) {
-                _core.AddModule(module);
+            foreach (var module in modules) {
+                var attr = module.GetType().GetCustomAttribute<ModuleItfAttribute>();
+                if (attr != null)
+                    _core.AddModule(attr.ItfType, module);
             }
             _core.InitializeModules();
         }
@@ -49,44 +64,46 @@ namespace ModuleBased.ForUnity {
         }
 
         #region -- IGameCore --
-        public IGameModule AddModule(Type type) {
-            IGameModule mod = _core.AddModule(type);
+        public IGameModule AddModule(Type itfType, Type modType) {
+            var mod = _core.AddModule(itfType, modType);
             StoreModule(mod);
             return mod;
         }
 
-        public void AddModule(IGameModule module) {
-            _core.AddModule(module);
-
-            StoreModule(module);
-        }
-
-        public TMod AddModule<TMod>() where TMod : IGameModule {
-            TMod mod = _core.AddModule<TMod>();
-            StoreModule(mod);
-            return mod;
-        }
-
-        public void AddModule<TMod>(TMod mod) where TMod : IGameModule {
-            _core.AddModule<TMod>(mod);
+        public void AddModule(Type itfType, IGameModule mod) {
+            _core.AddModule(itfType, mod);
             StoreModule(mod);
         }
 
-        public IGameModule GetModule(Type type, bool inherit = false) {
-            return _core.GetModule(type, inherit);
+        public TItf AddModule<TItf, TMod>()
+            where TItf : class
+            where TMod : IGameModule, TItf {
+            var itf = _core.AddModule<TItf, TMod>();
+            StoreModule(itf);
+            return itf;
         }
 
-        public TMod GetModule<TMod>(bool inherit = false) where TMod : IGameModule {
-            return _core.GetModule<TMod>(inherit);
+        public void AddModule<TItf>(IGameModule mod) where TItf : class {
+            _core.AddModule<TItf>(mod);
+            StoreModule(mod);
         }
 
-        public bool TryGetModule<TMod>(out TMod mod, bool inherit = false) where TMod : IGameModule {
-            return _core.TryGetModule<TMod>(out mod, inherit);
+        public IGameModule GetModule(Type itfType) {
+            return _core.GetModule(itfType);
         }
 
-        public bool TryGetModule(Type modType, out IGameModule mod, bool inherit = false) {
-            return _core.TryGetModule(modType, out mod, inherit);
+        public TItf GetModule<TItf>() where TItf : class {
+            return _core.GetModule<TItf>();
         }
+
+        public bool TryGetModule<TItf>(out TItf mod) where TItf : class {
+            return _core.TryGetModule<TItf>(out mod);
+        }
+
+        public bool TryGetModule(Type itfType, out IGameModule mod) {
+            return _core.TryGetModule(itfType, out mod);
+        }
+
 
         public void StartModules() {
             _core.StartModules();
@@ -102,13 +119,20 @@ namespace ModuleBased.ForUnity {
         /// Store the module under the game core
         /// </summary>
         /// <param name="module"></param>
-        private void StoreModule(IGameModule module) {
-            
+        private void StoreModule(object module) {
             Type modType = module.GetType();
             if (modType.IsSubclassOf(typeof(MonoBehaviour))) {
                 ((MonoBehaviour)module).transform.parent = transform;
             }
         }
 
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ModuleItfAttribute : Attribute {
+        public Type ItfType { get; }
+        public ModuleItfAttribute(Type itfType) {
+            ItfType = itfType;
+        }
     }
 }

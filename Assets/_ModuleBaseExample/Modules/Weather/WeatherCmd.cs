@@ -5,5 +5,5 @@ namespace ModuleBased.Example {
     [CommandInfo("Modules",
         "WeatherCmd",
         "Set weather")]
-    public class WeatherCmd : GenericCmd<WeatherModule> { }
+    public class WeatherCmd : GenericCmd<IWeatherModule> { }
 }

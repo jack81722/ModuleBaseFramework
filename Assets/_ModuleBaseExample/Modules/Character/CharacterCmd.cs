@@ -6,5 +6,5 @@ using UnityEngine;
 
 namespace ModuleBased.Example {
     [CommandInfo("Modules", "CharacterMod", "")]
-    public class CharacterCmd : GenericCmd<CharacterModule> { }
+    public class CharacterCmd : GenericCmd<ICharacterModule> { }
 }

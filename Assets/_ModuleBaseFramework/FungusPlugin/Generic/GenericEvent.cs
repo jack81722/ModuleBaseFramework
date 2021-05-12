@@ -8,10 +8,10 @@ using UnityEngine;
 using EventHandler = Fungus.EventHandler;
 
 namespace ModuleBased.FungusPlugin {
-    public abstract class GenericEvent<TMod> : EventHandler where TMod : IGameModule {
+    public abstract class GenericEvent<TItf> : EventHandler where TItf : class {
         private static readonly Type CmdAttr = typeof(ModuleEventAttribute);
 
-        private static TMod module;
+        private static TItf module;
         private static IDictionary<string, EventInfo> events;
 
         [SerializeField]
@@ -20,8 +20,8 @@ namespace ModuleBased.FungusPlugin {
 
         private void Start() {
             if (module == null)
-                module = UniGameCore.Singleton.GetModule<TMod>();
-            events = ModuleEventCache<TMod>.GetEvents();
+                module = UniGameCore.Singleton.GetModule<TItf>();
+            events = ModuleEventCache<TItf>.GetEvents();
 
             // register event
             if (events.TryGetValue(EventName, out EventInfo e)) {
@@ -44,7 +44,7 @@ namespace ModuleBased.FungusPlugin {
 
         public static void InitializeModuleEvents(ref Dictionary<string, EventInfo> events) {
             events = new Dictionary<string, EventInfo>();
-            Type modType = typeof(TMod);
+            Type modType = typeof(TItf);
             EventInfo[] methodInfos = modType.GetEvents(BindingFlags.Public | BindingFlags.Instance);
             foreach (var info in methodInfos) {
                 if (info.IsDefined(CmdAttr)) {
@@ -59,7 +59,7 @@ namespace ModuleBased.FungusPlugin {
         }
     }
 
-    public class ModuleEventCache<TMod> where TMod : IGameModule {
+    public class ModuleEventCache<TItf> where TItf : class {
         private static Dictionary<string, EventInfo> _events;
 
         public static IDictionary<string, EventInfo> GetEvents() {
@@ -75,7 +75,7 @@ namespace ModuleBased.FungusPlugin {
                 events = new Dictionary<string, EventInfo>();
             else
                 events.Clear();
-            Type modType = typeof(TMod);
+            Type modType = typeof(TItf);
             EventInfo[] methodInfos = modType.GetEvents(BindingFlags.Public | BindingFlags.Instance);
             foreach (var info in methodInfos) {
                 if (info.IsDefined(CmdAttr)) {

@@ -529,7 +529,7 @@ MonoBehaviour:
   selectedBlocks:
   - {fileID: 791207112}
   selectedCommands:
-  - {fileID: 791207119}
+  - {fileID: 791207111}
   variables: []
   description: 
   stepPause: 0
@@ -572,7 +572,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 540
     y: 175
-    width: 60
+    width: 98.8
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -715,7 +715,7 @@ MonoBehaviour:
   CmdName: MoveAToDestination
 --- !u!114 &791207119
 MonoBehaviour:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}

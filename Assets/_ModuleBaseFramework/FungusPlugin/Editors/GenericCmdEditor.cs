@@ -9,14 +9,14 @@ using System.Linq;
 using System;
 
 namespace ModuleBased.FungusPlugin.Editor {
-    public class GenericCmdEditor<TMod> : CommandEditor where TMod : IGameModule {
+    public class GenericCmdEditor<TItf> : CommandEditor where TItf : class {
         private IDictionary<string, MethodInfo> _methods;
         private SerializedProperty _cmdNameProp;
 
         public override void OnEnable() {
             base.OnEnable();
             _cmdNameProp = serializedObject.FindProperty("CmdName");
-            _methods = ModuleCmdCache<TMod>.GetMethods();
+            _methods = ModuleCmdCache<TItf>.GetMethods();
         }
 
         public override void DrawCommandInspectorGUI() {

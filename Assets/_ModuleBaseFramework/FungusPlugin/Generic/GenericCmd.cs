@@ -7,10 +7,10 @@ using System.Reflection;
 using UnityEngine;
 
 namespace ModuleBased.FungusPlugin {
-    public class GenericCmd<TMod> : Command where TMod : IGameModule {
+    public class GenericCmd<TItf> : Command where TItf : class {
         private static readonly Type CmdAttr = typeof(ModuleCmdAttribute);
 
-        private static TMod module;
+        private static TItf module;
         private static IDictionary<string, MethodInfo> methods;
 
         [SerializeField]
@@ -20,9 +20,9 @@ namespace ModuleBased.FungusPlugin {
 
         private void Start() {
             if (module == null) {
-                module = UniGameCore.Singleton.GetModule<TMod>();
+                module = UniGameCore.Singleton.GetModule<TItf>();
             }
-            methods = ModuleCmdCache<TMod>.GetMethods();
+            methods = ModuleCmdCache<TItf>.GetMethods();
         }
 
         private void Update() {
@@ -69,7 +69,7 @@ namespace ModuleBased.FungusPlugin {
     /// <summary>
     /// Static type cache of module
     /// </summary>
-    public class ModuleCmdCache<TMod> where TMod : IGameModule {
+    public class ModuleCmdCache<TItf> where TItf : class {
         private static Dictionary<string, MethodInfo> _methods;
 
         public static IDictionary<string, MethodInfo> GetMethods() {
@@ -85,7 +85,7 @@ namespace ModuleBased.FungusPlugin {
                 methods = new Dictionary<string, MethodInfo>();
             else
                 methods.Clear();
-            Type modType = typeof(TMod);
+            Type modType = typeof(TItf);
             MethodInfo[] methodInfos = modType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             foreach (var info in methodInfos) {
                 if (info.IsDefined(CmdAttr)) {
