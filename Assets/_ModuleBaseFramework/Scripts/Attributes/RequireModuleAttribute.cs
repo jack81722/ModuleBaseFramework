@@ -11,5 +11,5 @@ namespace ModuleBased {
     /// GameCore system will catch this attribute and auto assign initialized module 
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class RequireModuleAttribte : Attribute { }
+    public class RequireModuleAttribute : Attribute { }
 }

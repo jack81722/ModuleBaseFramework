@@ -20,7 +20,7 @@ namespace ModuleBased.Dialogue.FungusPlugin {
 
         private void Start() {
             if (module == null)
-                module = UniGameCore.Singleton.GetModule<TItf>();
+                module = UniGameCore.Singleton.Modules.GetModule<TItf>();
             events = ModuleEventCache<TItf>.GetEvents();
 
             // register event

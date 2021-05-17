@@ -5,5 +5,9 @@ using UnityEngine;
 namespace ModuleBased.Dialogue {
     public interface IDialogueBlock {
         void StartExecution();
+
+        void Next();
+
+        void AddCommand(IDialogueCommand cmd);
     }
 }

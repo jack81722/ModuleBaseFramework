@@ -20,24 +20,40 @@ namespace ModuleBased.AOP {
             set { throw new NotSupportedException(); }
         }
 
+        private Dictionary<MethodInfo, List<IModuleProxyAttribute>> _methodAttrs;
+
         public ModuleProxy(T obj) : base(typeof(T)) {
             _wrappedObj = obj;
+            _methodAttrs = new Dictionary<MethodInfo, List<IModuleProxyAttribute>>();
         }
 
         public override IMessage Invoke(IMessage msg) {
             IMethodCallMessage callMethod = msg as IMethodCallMessage;
             MethodInfo targetMethod = callMethod.MethodBase as MethodInfo;
             IMethodReturnMessage returnMethod = null;
-            var attrs = targetMethod.GetCustomAttributes().OfType<IModuleProxyAttribute>();
+            var attrs = GetAttributes(targetMethod);
             if (targetMethod != null) {
                 HandleBeforeExecuting(targetMethod, callMethod.Args, attrs);
                 var result = targetMethod.Invoke(_wrappedObj, callMethod.Args);
                 HandleAfterExecuteing(targetMethod, callMethod.Args, result, attrs);
                 returnMethod = new ReturnMessage(result, null, 0,
                   callMethod.LogicalCallContext, callMethod);
-                
             }
             return returnMethod;
+        }
+
+        private IEnumerable<IModuleProxyAttribute> GetAttributes(MethodInfo method) {
+            if(!_methodAttrs.TryGetValue(method, out List<IModuleProxyAttribute> list)) {
+                return CacheAttributes(method);
+            }
+            return list;
+        }
+
+        private List<IModuleProxyAttribute> CacheAttributes(MethodInfo method) {
+            var attrs = method.GetCustomAttributes().OfType<IModuleProxyAttribute>();
+            var list = new List<IModuleProxyAttribute>(attrs);
+            _methodAttrs.Add(method, list);
+            return list;
         }
 
         #region -- Invoke before/after handlers --

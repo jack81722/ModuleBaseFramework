@@ -23,7 +23,7 @@ namespace ModuleBased.Dialogue.FungusPlugin {
 
         private void Start() {
             if (module == null) {
-                module = UniGameCore.Singleton.GetModule<TItf>();
+                module = UniGameCore.Singleton.Modules.GetModule<TItf>();
             }
             methods = ModuleCmdCache<TItf>.GetMethods();
         }

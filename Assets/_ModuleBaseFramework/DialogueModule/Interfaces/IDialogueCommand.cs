@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace ModuleBased.Dialogue {
     public interface IDialogueCommand {
-        void Execute();
+        IDialogueBlock Parent { get; set; }
+        void OnStart();
+
+        IEnumerator Execute();
+
+        void OnEnd();
     }
 }

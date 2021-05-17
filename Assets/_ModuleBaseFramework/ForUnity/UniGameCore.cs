@@ -23,14 +23,23 @@ namespace ModuleBased.ForUnity {
         }
 
         /// <summary>
-        /// Internal core
+        /// Collection of modules
         /// </summary>
-        private IGameCore _core;
+        public IGameModuleCollection Modules { get; private set; }
 
+        /// <summary>
+        /// Collection of views
+        /// </summary>
+        public IGameViewCollection Views { get; private set; }
+
+        /// <summary>
+        /// Setup singleton, core, modules, and views
+        /// </summary>
         private void Awake() {
             InitializeSingleton();
             InitializeCore();
             AddAndInitializeModules();
+            AddAndInitializeViews();
         }
         private void InitializeSingleton() {
             // singleton
@@ -45,7 +54,11 @@ namespace ModuleBased.ForUnity {
             // initialize core
             ILogger logger = new UniLogger();
             IModuleProxyFactory proxyFactory = new NoneModuleProxyFactory();
-            _core = new GameCore(logger, proxyFactory);
+            var dgmc = new DefaultGameModuleCollection(logger, proxyFactory);
+            dgmc.OnAddModule += StoreModule;
+            Modules = dgmc;
+            var dgvc = new DefaultGameViewCollection(logger, dgmc);
+            Views = dgvc;
         }
 
         private void AddAndInitializeModules() {
@@ -54,69 +67,26 @@ namespace ModuleBased.ForUnity {
             foreach (var module in modules) {
                 var attr = module.GetType().GetCustomAttribute<ModuleItfAttribute>();
                 if (attr != null)
-                    _core.AddModule(attr.ItfType, module);
+                    Modules.AddModule(attr.ItfType, module);
             }
-            _core.InitializeModules();
+            Modules.InitializeModules();
+        }
+
+        private void AddAndInitializeViews() {
+            
+            IGameView[] views = GetComponentsInChildren<IGameView>();
+            foreach(var view in views) {
+                Views.AddView(view);
+            }
+            Views.InitializeViews();
         }
 
         private void Start() {
-            StartModules();
+            Modules.StartModules();
         }
-
-        #region -- IGameCore --
-        public IGameModule AddModule(Type itfType, Type modType) {
-            var mod = _core.AddModule(itfType, modType);
-            StoreModule(mod);
-            return mod;
-        }
-
-        public void AddModule(Type itfType, IGameModule mod) {
-            _core.AddModule(itfType, mod);
-            StoreModule(mod);
-        }
-
-        public TItf AddModule<TItf, TMod>()
-            where TItf : class
-            where TMod : IGameModule, TItf {
-            var itf = _core.AddModule<TItf, TMod>();
-            StoreModule(itf);
-            return itf;
-        }
-
-        public void AddModule<TItf>(IGameModule mod) where TItf : class {
-            _core.AddModule<TItf>(mod);
-            StoreModule(mod);
-        }
-
-        public IGameModule GetModule(Type itfType) {
-            return _core.GetModule(itfType);
-        }
-
-        public TItf GetModule<TItf>() where TItf : class {
-            return _core.GetModule<TItf>();
-        }
-
-        public bool TryGetModule<TItf>(out TItf mod) where TItf : class {
-            return _core.TryGetModule<TItf>(out mod);
-        }
-
-        public bool TryGetModule(Type itfType, out IGameModule mod) {
-            return _core.TryGetModule(itfType, out mod);
-        }
-
-
-        public void StartModules() {
-            _core.StartModules();
-        }
-
-
-        public void InitializeModules() {
-            _core.InitializeModules();
-        }
-
-        #endregion
+        
         /// <summary>
-        /// Store the module under the game core
+        /// Store the module under the game core transform
         /// </summary>
         /// <param name="module"></param>
         private void StoreModule(object module) {
@@ -128,6 +98,9 @@ namespace ModuleBased.ForUnity {
 
     }
 
+    /// <summary>
+    /// Attribute of specific interface with module
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class ModuleItfAttribute : Attribute {
         public Type ItfType { get; }
