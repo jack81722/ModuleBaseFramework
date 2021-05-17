@@ -1,5 +1,5 @@
 ﻿#if UNITY_EDITOR
-using ModuleBased.FungusPlugin.Editor;
+using ModuleBased.Dialogue.FungusPlugin.Editor;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;

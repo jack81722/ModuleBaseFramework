@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ModuleBased.FungusPlugin {
+namespace ModuleBased.Dialogue {
     [AttributeUsage(AttributeTargets.Event)]
     public class ModuleEventAttribute : Attribute {
         public string EventName { get; }

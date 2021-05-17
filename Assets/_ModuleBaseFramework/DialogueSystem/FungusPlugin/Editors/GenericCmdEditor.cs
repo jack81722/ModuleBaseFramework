@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Linq;
 using System;
 
-namespace ModuleBased.FungusPlugin.Editor {
+namespace ModuleBased.Dialogue.FungusPlugin.Editor {
     public class GenericCmdEditor<TItf> : CommandEditor where TItf : class {
         /// <summary>
         /// Dictionary of command name and method information

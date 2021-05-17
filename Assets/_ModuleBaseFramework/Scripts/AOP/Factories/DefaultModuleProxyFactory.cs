@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if true
+using System;
 using System.Runtime.Remoting.Proxies;
 
 namespace ModuleBased.AOP.Factories {
@@ -24,3 +25,4 @@ namespace ModuleBased.AOP.Factories {
         }
     }
 }
+#endif

@@ -1,5 +1,5 @@
 ﻿using Fungus;
-using ModuleBased.FungusPlugin;
+using ModuleBased.Dialogue.FungusPlugin;
 
 namespace ModuleBased.Example {
     [EventHandlerInfo("Modules",

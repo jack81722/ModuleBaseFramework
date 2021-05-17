@@ -1,5 +1,5 @@
 ﻿using Fungus;
-using ModuleBased.FungusPlugin;
+using ModuleBased.Dialogue.FungusPlugin;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

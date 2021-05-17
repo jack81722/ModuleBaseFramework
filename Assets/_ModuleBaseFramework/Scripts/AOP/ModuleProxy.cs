@@ -1,4 +1,4 @@
-﻿
+﻿#if true
 using ModuleBased.AOP.Attributes;
 using System;
 using System.Collections.Generic;
@@ -71,3 +71,4 @@ namespace ModuleBased.AOP {
         }
     }
 }
+#endif

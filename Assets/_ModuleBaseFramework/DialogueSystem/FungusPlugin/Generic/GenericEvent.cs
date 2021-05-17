@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using EventHandler = Fungus.EventHandler;
 
-namespace ModuleBased.FungusPlugin {
+namespace ModuleBased.Dialogue.FungusPlugin {
     public abstract class GenericEvent<TItf> : EventHandler where TItf : class {
         private static readonly Type CmdAttr = typeof(ModuleEventAttribute);
 

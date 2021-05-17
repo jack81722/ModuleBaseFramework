@@ -8,7 +8,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace ModuleBased.FungusPlugin.Editor {
+namespace ModuleBased.Dialogue.FungusPlugin.Editor {
     public abstract class GenericEventEditor<TItf> : EventHandlerEditor where TItf : class {
         private IDictionary<string, EventInfo> _events;
         private SerializedProperty _eventNameProp;

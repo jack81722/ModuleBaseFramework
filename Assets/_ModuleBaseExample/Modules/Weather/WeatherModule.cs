@@ -1,6 +1,6 @@
 ﻿using ModuleBased.AOP.Attributes;
 using ModuleBased.ForUnity;
-using ModuleBased.FungusPlugin;
+using ModuleBased.Dialogue;
 using UnityEngine;
 
 namespace ModuleBased.Example {

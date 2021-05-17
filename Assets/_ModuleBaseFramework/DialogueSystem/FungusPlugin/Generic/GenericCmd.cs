@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.Reflection;
 using UnityEngine;
 
-namespace ModuleBased.FungusPlugin {
+namespace ModuleBased.Dialogue.FungusPlugin {
     public class GenericCmd<TItf> : Command where TItf : class {
         private static readonly Type CmdAttr = typeof(ModuleCmdAttribute);
 
@@ -86,11 +86,13 @@ namespace ModuleBased.FungusPlugin {
             return converter.ConvertFromInvariantString(valStr);
         }
 
+#if UNITY_EDITOR
         #region -- Editor cache --
         public override string CommandName() {
             return GetType().Name + "." + CmdName;
         }
         #endregion
+#endif
     }
 
     /// <summary>
