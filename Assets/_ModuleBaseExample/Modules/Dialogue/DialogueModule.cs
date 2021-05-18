@@ -12,7 +12,7 @@ namespace ModuleBased.Example.Dialogue {
     [ModuleItf(typeof(IDialogueModule))]
     public class DialogueModule : MonoBehaviour, IGameModule, IDialogueModule {
         private Dictionary<string, IDialogueBlock> _blockCache;
-
+        private Coroutine _currentBlockCoroutine;
         public IGameModuleCollection Modules { get; set; }
 
         [RequireDao]
@@ -30,6 +30,10 @@ namespace ModuleBased.Example.Dialogue {
             StartBlock("FirstMeet");
         }
 
+        private void Update() {
+            if (Input.GetKeyDown(KeyCode.Space))
+                StartBlock("FirstMeet");
+        }
 
         public IDialogueBlock CreateBlock(string blockName) {
             if (_dialogueDao.TryGetBlock(blockName, out BlockInfo blockInfo)) {
@@ -52,12 +56,14 @@ namespace ModuleBased.Example.Dialogue {
         }
 
         public void StartBlock(string blockName) {
+            if (_currentBlockCoroutine != null)
+                StopCoroutine(_currentBlockCoroutine);
             if (!_blockCache.TryGetValue(blockName, out IDialogueBlock block)) {
                 block = CreateBlock(blockName);
                 if (block != null)
                     _blockCache.Add(blockName, block);
             }
-            block.StartExecution();
+            _currentBlockCoroutine = StartCoroutine(block.StartExecution());
         }
 
         #region -- Module command methods --

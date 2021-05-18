@@ -8,6 +8,7 @@ namespace ModuleBased.Example.Dialogue {
     public class SayCommand : DefaultCommand {
         public string CharName { get; }
         private string _sayText;
+        private bool _isFinished;
 
         private ITextTimer _textTimer;
 
@@ -19,13 +20,25 @@ namespace ModuleBased.Example.Dialogue {
             _textTimer = new TextPerFrame();
         }
 
+        public override IEnumerator Execute() {
+            // wait say dialogue finished
+            while (!_isFinished) {
+                yield return null;
+            }
+        }
+
         public override void OnEnd() {
-            // close say dialogue if no next command
-            if (!Parent.Next())
-                SayDialogue.Singleton.Close();
+            if (_isFinished) {
+                // close say dialogue if no next command
+                if (!Parent.Next())
+                    SayDialogue.Singleton.Close();
+            } else {
+                _isFinished = true;
+            }
         }
 
         public override void OnStart() {
+            _isFinished = false;
             SayDialogue.Singleton.BeginSay(CharName, _sayText, OnEnd);
         }
     }

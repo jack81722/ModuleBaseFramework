@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace ModuleBased.Dialogue {
@@ -17,7 +18,7 @@ namespace ModuleBased.Dialogue {
         }
 
         public IEnumerator Execute() {
-            return null;
+            return StartExecution();
         }
 
         public bool Next() {
@@ -25,16 +26,31 @@ namespace ModuleBased.Dialogue {
         }
 
         public void OnEnd() {
-            Parent.Next();
+            //Parent.Next();
         }
 
         public void OnStart() {
-            StartExecution();
+            //StartExecution();
         }
 
-        public void StartExecution() {
-            foreach(var cmd in _commands) {
+        public IEnumerator StartExecution() {
+            IEnumerator[] enumerators = new IEnumerator[_commands.Count];
+            int i = 0;
+            foreach (var cmd in _commands) {
                 cmd.OnStart();
+                enumerators[i++] = cmd.Execute();
+            }
+            bool running = true;
+            while (running) {
+                running = false;
+                foreach (var e in enumerators) {
+                    running |= e.MoveNext();
+                }
+                yield return null;
+            }
+
+            foreach (var cmd in _commands) {
+                cmd.OnEnd();
             }
         }
     }

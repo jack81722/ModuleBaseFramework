@@ -19,10 +19,24 @@ namespace ModuleBased.Dialogue {
             _commands = new List<IDialogueCommand>();
         }
 
-        public void StartExecution() {
-            if (_commands.Count > 0) {
-                _cmdIndex = 0;
+        //public void StartExecution() {
+        //    if (_commands.Count > 0) {
+        //        _cmdIndex = 0;
+        //        Current.OnStart();
+        //    }
+        //}
+
+        public IEnumerator StartExecution() {
+            _cmdIndex = 0;
+            IEnumerator curEnumerator;
+            while (_cmdIndex < _commands.Count) {
                 Current.OnStart();
+                curEnumerator = Current.Execute();
+                while (curEnumerator != null && curEnumerator.MoveNext()) {
+                    yield return null;
+                }
+                Current.OnEnd();
+                _cmdIndex++;
             }
         }
 
@@ -34,10 +48,7 @@ namespace ModuleBased.Dialogue {
         }
 
         public bool Next() {
-            _cmdIndex++;
-            bool result = _cmdIndex < _commands.Count;
-            if (result)
-                Current.OnStart();
+            bool result = _cmdIndex + 1 < _commands.Count;
             return result;
         }
 
