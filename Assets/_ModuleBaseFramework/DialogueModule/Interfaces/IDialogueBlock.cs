@@ -6,7 +6,7 @@ namespace ModuleBased.Dialogue {
     public interface IDialogueBlock {
         void StartExecution();
 
-        void Next();
+        bool Next();
 
         void AddCommand(IDialogueCommand cmd);
     }

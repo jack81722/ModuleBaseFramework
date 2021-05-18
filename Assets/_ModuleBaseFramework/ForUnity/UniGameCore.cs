@@ -55,7 +55,7 @@ namespace ModuleBased.ForUnity {
             ILogger logger = new UniLogger();
             IModuleProxyFactory proxyFactory = new NoneModuleProxyFactory();
             var dgmc = new DefaultGameModuleCollection(logger, proxyFactory);
-            dgmc.OnAddModule += StoreModule;
+            //dgmc.OnAddModule += StoreModule;
             Modules = dgmc;
             var dgvc = new DefaultGameViewCollection(logger, dgmc);
             Views = dgvc;

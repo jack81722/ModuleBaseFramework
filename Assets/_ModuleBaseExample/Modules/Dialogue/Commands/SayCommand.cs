@@ -22,19 +22,17 @@ namespace ModuleBased.Example.Dialogue {
         public IDialogueBlock Parent { get; set; }
 
         public IEnumerator Execute() {
-            _textTimer.Update();
-            while (_textTimer.Count < _sayText.Length) {
-                _textTimer.Update();
-                yield return null;
-            }
+            return null;
         }
 
         public void OnEnd() {
-            Parent.Next();
+            // close say dialogue if no next command
+            if (!Parent.Next())
+                SayDialogue.Singleton.Close();
         }
 
         public void OnStart() {
-            
+            SayDialogue.Singleton.BeginSay(CharName, _sayText, OnEnd);
         }
     }
 

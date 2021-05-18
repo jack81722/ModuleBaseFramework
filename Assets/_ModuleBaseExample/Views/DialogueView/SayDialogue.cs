@@ -6,6 +6,20 @@ using UnityEngine.UI;
 
 namespace ModuleBased.Example.DialogueViews {
     public class SayDialogue : MonoBehaviour, ISayWindow {
+        private static SayDialogue _singleton;
+        public static SayDialogue Singleton {
+            get {
+                if(_singleton == null) {
+                    _singleton = FindObjectOfType<SayDialogue>();
+                    if(_singleton == null) {
+                        var prefab = Resources.Load<SayDialogue>("Prefabs/SayDialogue");
+                        _singleton = Instantiate(prefab);
+                        _singleton.gameObject.SetActive(false);
+                    }
+                }
+                return _singleton;
+            }
+        }
 
         public Image UImg_CharBanner;
         public Text UTxt_CharName;
@@ -24,6 +38,14 @@ namespace ModuleBased.Example.DialogueViews {
         private EndSayCallback _onEndSay;
 
         private bool _isFinished;
+
+        private void Awake() {
+            if(_singleton != null && _singleton != this) {
+                Destroy(gameObject);
+            } else {
+                _singleton = this;
+            }
+        }
 
         public void BeginSay(string sayText, EndSayCallback endSay = null) {
             gameObject.SetActive(true);
@@ -97,6 +119,10 @@ namespace ModuleBased.Example.DialogueViews {
                 EndSaying();
             else
                 ShowAllTextImmediatly();
+        }
+
+        public void Close() {
+            gameObject.SetActive(false);
         }
     }
 

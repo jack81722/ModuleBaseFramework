@@ -18,5 +18,7 @@ namespace ModuleBased.Example.DialogueViews {
         /// Show all text immediately
         /// </summary>
         void ShowAllTextImmediatly();
+
+        void Close();
     }
 }

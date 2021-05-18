@@ -25,13 +25,12 @@ namespace ModuleBased.Example.DialogueViews {
 
         private UniDialogueWindowCollection _windows;
 
-        public SayDialogue SayDialoguePrefab;
 
         private void Start() {
-            _windows = new UniDialogueWindowCollection();
-            _windows.AddDialogueWindow<ISayWindow>(Instantiate(SayDialoguePrefab));
+            //_windows = new UniDialogueWindowCollection();
+            //_windows.AddDialogueWindow<ISayWindow>(SayDialogue.Singleton);
 
-            StartDialogue();
+            //StartDialogue();
         }
 
         private void StartDialogue() {

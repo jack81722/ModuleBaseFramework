@@ -6062,8 +6062,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47f181bee35fbea40a1910dabdda75a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SayDialoguePrefab: {fileID: 4212551864802844907, guid: b91e390683ff10f46810180297ac7a1f,
-    type: 3}
 --- !u!1 &2052477858
 GameObject:
   m_ObjectHideFlags: 0
@@ -6106,6 +6104,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2111648773}
+  - component: {fileID: 2111648774}
   m_Layer: 0
   m_Name: DialogueModule
   m_TagString: Untagged
@@ -6127,3 +6126,15 @@ Transform:
   m_Father: {fileID: 2052477859}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2111648774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111648772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4aa1d45292783049a34314060b89713, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
