@@ -7,13 +7,13 @@ using UnityEngine;
 namespace ModuleBased.Example {
     [ModuleItf(typeof(ICharacterModule))]
     public class CharacterModule : MonoBehaviour, IGameModule, ICharacterModule {
-
         [SerializeField]
         private GameObject _a;
         [SerializeField]
         private GameObject _b;
 
         #region -- IGameModule --
+        public IGameModuleCollection Modules { get; set; }
         public void OnModuleInitialize() {
 
         }

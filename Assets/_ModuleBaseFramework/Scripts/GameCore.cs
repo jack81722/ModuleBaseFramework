@@ -1,17 +1,17 @@
 ﻿using ModuleBased.AOP;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+using ModuleBased.DAO;
 
 namespace ModuleBased {
     public class GameCore : IGameCore {
         public IGameModuleCollection Modules { get; }
         public IGameViewCollection Views { get; }
+        public IGameDaoCollection Daos { get; }
 
         public GameCore(ILogger logger, IModuleProxyFactory proxyFactory) {
-            Modules = new DefaultGameModuleCollection(logger, proxyFactory);
+            Daos = new DefaultGameDaoCollection();
+            Modules = new DefaultGameModuleCollection(Daos, logger, proxyFactory);
             Views = new DefaultGameViewCollection(logger, Modules);
+            
         }
     }
 }

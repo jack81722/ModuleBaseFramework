@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ModuleBased.DAO;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,5 +8,7 @@ namespace ModuleBased {
         IGameModuleCollection Modules { get; }
 
         IGameViewCollection Views { get; }
+
+        IGameDaoCollection Daos { get; }
     }
 }

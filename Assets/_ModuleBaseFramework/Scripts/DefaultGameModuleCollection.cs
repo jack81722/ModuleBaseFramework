@@ -1,11 +1,15 @@
 ﻿using ModuleBased.AOP;
+using ModuleBased.DAO;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace ModuleBased {
     public class DefaultGameModuleCollection : IGameModuleCollection {
         private Dictionary<Type, IGameModule> _modules;
+
+        private IGameDaoCollection _daos;
 
         private ILogger _logger;
 
@@ -20,7 +24,8 @@ namespace ModuleBased {
         public delegate void ModuleHandler(IGameModule module);
         public event ModuleHandler OnAddModule;
 
-        public DefaultGameModuleCollection(ILogger logger, IModuleProxyFactory proxyFactory) {
+        public DefaultGameModuleCollection(IGameDaoCollection daos, ILogger logger, IModuleProxyFactory proxyFactory) {
+            _daos = daos;
             _logger = logger;
             _proxyFactory = proxyFactory;
             _modules = new Dictionary<Type, IGameModule>();
@@ -111,6 +116,7 @@ namespace ModuleBased {
                 }
             }
             AssignRequiredModules();
+            AssigneRequiredDaos();
             _isInit = true;
         }
 
@@ -128,11 +134,10 @@ namespace ModuleBased {
             _isStart = true;
         }
 
-        #region -- Assign required module methods --
+        #region -- Assign required element methods --
         private void AssignRequiredModules() {
-            foreach (var pair in _modules) {
-                Type modType = pair.Key;
-                IGameModule modInst = pair.Value;
+            foreach (var modInst in _modules.Values) {
+                Type modType = modInst.GetType();
                 AssignRequiredModule(modType, modInst);
             }
         }
@@ -155,6 +160,32 @@ namespace ModuleBased {
                 }
             }
         }
+
+        private void AssigneRequiredDaos() {
+            foreach (var modInst in _modules.Values) {
+                Type modType = modInst.GetType();
+                AssignRequiredDao(modType, modInst);
+            }
+        }
+
+        private void AssignRequiredDao(Type modType, IGameModule modInst) {
+            MemberInfo[] members = modType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var member in members) {
+                if (member.IsDefined(typeof(RequireDaoAttribute))) {
+                    if (member.MemberType == MemberTypes.Field) {
+                        FieldInfo field = (FieldInfo)member;
+                        Type reqType = field.FieldType;
+                        field.SetValue(modInst, _daos.GetDao(reqType));
+                    }
+                    if (member.MemberType == MemberTypes.Property) {
+                        PropertyInfo prop = (PropertyInfo)member;
+                        Type reqType = prop.PropertyType;
+                        prop.SetValue(modInst, _daos.GetDao(reqType));
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region -- Check methods --
@@ -179,7 +210,18 @@ namespace ModuleBased {
             }
             if (_isStart)
                 mod.OnModuleStart();
+            mod.Modules = this;
             OnAddModule?.Invoke(mod);
+        }
+        #endregion
+
+        #region -- IEnumerable --
+        public IEnumerator<IGameModule> GetEnumerator() {
+            return _modules.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return _modules.Values.GetEnumerator();
         }
         #endregion
     }

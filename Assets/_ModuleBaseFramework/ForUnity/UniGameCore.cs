@@ -1,5 +1,6 @@
 ﻿using ModuleBased.AOP;
 using ModuleBased.AOP.Factories;
+using ModuleBased.DAO;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -22,6 +23,8 @@ namespace ModuleBased.ForUnity {
             }
         }
 
+        private ILogger _logger;
+
         /// <summary>
         /// Collection of modules
         /// </summary>
@@ -33,11 +36,23 @@ namespace ModuleBased.ForUnity {
         public IGameViewCollection Views { get; private set; }
 
         /// <summary>
+        /// Collection of data access objects
+        /// </summary>
+        public IGameDaoCollection Daos { get; private set; }
+
+        public ScriptableObject[] CustomDaos;
+
+        /// <summary>
         /// Setup singleton, core, modules, and views
         /// </summary>
         private void Awake() {
             InitializeSingleton();
             InitializeCore();
+            /*
+             * In online game, dao layer must be waiting connection.
+             * Module and views should wait dao initialization.
+             */
+            AddAndInitializeDaos();
             AddAndInitializeModules();
             AddAndInitializeViews();
         }
@@ -52,13 +67,24 @@ namespace ModuleBased.ForUnity {
 
         private void InitializeCore() {
             // initialize core
-            ILogger logger = new UniLogger();
+            _logger = new UniLogger();
             IModuleProxyFactory proxyFactory = new NoneModuleProxyFactory();
-            var dgmc = new DefaultGameModuleCollection(logger, proxyFactory);
-            //dgmc.OnAddModule += StoreModule;
+            var ddaoc = new DefaultGameDaoCollection();
+            Daos = ddaoc;
+            var dgmc = new DefaultGameModuleCollection(Daos, _logger, proxyFactory);
             Modules = dgmc;
-            var dgvc = new DefaultGameViewCollection(logger, dgmc);
+            var dgvc = new DefaultGameViewCollection(_logger, dgmc);
             Views = dgvc;
+        }
+
+        private void AddAndInitializeDaos() {
+            foreach(var dao in CustomDaos) {
+                Type daoType = dao.GetType();
+                if (daoType.IsDefined(typeof(UniDaoAttribute))) {
+                    var attr = daoType.GetCustomAttribute<UniDaoAttribute>();
+                    Daos.AddDao(attr.ItfType, dao);
+                }
+            }
         }
 
         private void AddAndInitializeModules() {

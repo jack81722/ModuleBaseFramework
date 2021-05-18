@@ -69,6 +69,8 @@ namespace ModuleBased.AOP {
         #endregion
 
         #region -- IGameModule methods --
+        public IGameModuleCollection Modules { get; set; }
+
         public void OnModuleInitialize() {
             var mod = _wrappedObj as IGameModule;
             if (mod != null)

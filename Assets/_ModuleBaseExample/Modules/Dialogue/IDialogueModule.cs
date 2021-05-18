@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace ModuleBased.Example.Dialogue {
     public interface IDialogueModule {
-        DialogueStartHandler OnStartDialogue { get; set; }
-    }
+        void StartBlock(string blockName);
 
-    public delegate void DialogueStartHandler(IDialogueCommand cmd);
+
+    }
 }

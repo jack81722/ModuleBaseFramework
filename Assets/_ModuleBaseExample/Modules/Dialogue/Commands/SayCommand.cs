@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModuleBased.Example.Dialogue {
-    public class SayCommand : IDialogueCommand {
+    public class SayCommand : DefaultCommand {
         public string CharName { get; }
         private string _sayText;
 
@@ -19,19 +19,13 @@ namespace ModuleBased.Example.Dialogue {
             _textTimer = new TextPerFrame();
         }
 
-        public IDialogueBlock Parent { get; set; }
-
-        public IEnumerator Execute() {
-            return null;
-        }
-
-        public void OnEnd() {
+        public override void OnEnd() {
             // close say dialogue if no next command
             if (!Parent.Next())
                 SayDialogue.Singleton.Close();
         }
 
-        public void OnStart() {
+        public override void OnStart() {
             SayDialogue.Singleton.BeginSay(CharName, _sayText, OnEnd);
         }
     }

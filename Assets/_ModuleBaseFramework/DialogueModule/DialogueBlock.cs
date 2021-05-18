@@ -6,11 +6,14 @@ namespace ModuleBased.Dialogue {
     /// <summary>
     /// Block will link all of command orderly
     /// </summary>
-    public class DialogueBlock : IDialogueBlock {
+    public class DialogueBlock : IDialogueBlock, IDialogueCommand {
         private List<IDialogueCommand> _commands;
         private int _cmdIndex;
 
         public IDialogueCommand Current => _commands[_cmdIndex];
+        private IEnumerator _curEnumerator;
+
+        public IDialogueBlock Parent { get; set; }
 
         public DialogueBlock() {
             _commands = new List<IDialogueCommand>();
@@ -36,6 +39,19 @@ namespace ModuleBased.Dialogue {
             if (result)
                 Current.OnStart();
             return result;
+        }
+
+        public void OnStart() {
+            //Current.OnStart();
+            _curEnumerator = Current.Execute();
+        }
+
+        public IEnumerator Execute() {
+            return _curEnumerator;
+        }
+
+        public void OnEnd() {
+            _curEnumerator = null;
         }
     }
 }

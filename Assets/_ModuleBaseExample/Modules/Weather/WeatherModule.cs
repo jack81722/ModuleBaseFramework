@@ -15,6 +15,8 @@ namespace ModuleBased.Example {
         public event SetWeatherHandler OnSetWeather;
 
         #region -- IGameModule --
+        public IGameModuleCollection Modules { get; set; }
+
         public void OnModuleInitialize() {
             WeatherState = EWeatherState.Sunny;
         }
