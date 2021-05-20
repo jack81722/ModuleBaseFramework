@@ -104,6 +104,7 @@ namespace ModuleBased.Example.DialogueViews {
                 StopCoroutine(_sayCoroutine);
             UTxt_Say.text = SayText;
             _isFinished = true;
+            _onEndSay?.Invoke();
         }
 
         

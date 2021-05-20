@@ -9,6 +9,7 @@ namespace ModuleBased.Example.Dialogue {
         public string CharName { get; }
         private string _sayText;
         private bool _isFinished;
+        private bool _isClosed;
 
         private ITextTimer _textTimer;
 
@@ -22,24 +23,28 @@ namespace ModuleBased.Example.Dialogue {
 
         public override IEnumerator Execute() {
             // wait say dialogue finished
-            while (!_isFinished) {
+            while (!_isFinished || !_isClosed) {
                 yield return null;
             }
         }
 
         public override void OnEnd() {
             if (_isFinished) {
-                // close say dialogue if no next command
-                if (!Parent.Next())
-                    SayDialogue.Singleton.Close();
+                SayDialogue.Singleton.Close();
+                _isClosed = true;
             } else {
                 _isFinished = true;
             }
         }
 
         public override void OnStart() {
-            _isFinished = false;
+            Reset();
             SayDialogue.Singleton.BeginSay(CharName, _sayText, OnEnd);
+        }
+
+        public void Reset() {
+            _isFinished = false;
+            _isClosed = false;
         }
     }
 

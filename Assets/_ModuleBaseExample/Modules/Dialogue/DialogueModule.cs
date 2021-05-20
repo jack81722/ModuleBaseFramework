@@ -1,5 +1,6 @@
 ﻿using ModuleBased.Dialogue;
 using ModuleBased.ForUnity;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,28 +19,42 @@ namespace ModuleBased.Example.Dialogue {
         [RequireDao]
         private IDialogueDao _dialogueDao;
 
+        #region -- IGameModule --
         public void OnModuleInitialize() {
             _blockCache = new Dictionary<string, IDialogueBlock>();
         }
 
         public void OnModuleStart() {
-            //foreach(var mod in Modules) {
-                // get all method with module command attribute
-                // create and cache cmd
-            //}
-            StartBlock("FirstMeet");
+            InitializeModuleCmds();
+            Test();
         }
+        #endregion
 
+        #region -- Unity APIs --
         private void Update() {
             if (Input.GetKeyDown(KeyCode.Space))
                 StartBlock("FirstMeet");
+        }
+        #endregion
+
+        private void Test() {
+            var block = CreateBlock("test");
+            block.AddCommand(new SayCommand("Coinmouse", "Hello XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
+            var parallel = new ParallelDialogueBlock();
+            parallel.AddCommand(CreateModuleCommand("SetWeather", EWeatherState.Rain));
+            parallel.AddCommand(new SayCommand("Coinmouse", "............................................."));
+            block.AddCommand(parallel);
+            //block.AddCommand(CreateModuleCommand("SetRain"));
+            block.AddCommand(new WaitSecondCommand() { WaitSecond = 2 });
+            block.AddCommand(new SayCommand("Coinmouse", "OMG"));
+            StartBlock(block);
         }
 
         public IDialogueBlock CreateBlock(string blockName) {
             if (_dialogueDao.TryGetBlock(blockName, out BlockInfo blockInfo)) {
                 return CreateBlock(blockInfo);
             }
-            return null;
+            return new DialogueBlock();
         }
 
         public IDialogueBlock CreateBlock(BlockInfo blockInfo) {
@@ -55,6 +70,13 @@ namespace ModuleBased.Example.Dialogue {
             return block;
         }
 
+        public IDialogueCommand CreateModuleCommand(string cmdName, params object[] parameters) {
+            _modCmds.TryGetValue(cmdName, out IGenericModuleCommand cmd);
+            IGenericModuleCommand clonedCmd = (IGenericModuleCommand)cmd.Clone();
+            clonedCmd.SetParameters(parameters);
+            return clonedCmd;
+        }
+
         public void StartBlock(string blockName) {
             if (_currentBlockCoroutine != null)
                 StopCoroutine(_currentBlockCoroutine);
@@ -66,29 +88,32 @@ namespace ModuleBased.Example.Dialogue {
             _currentBlockCoroutine = StartCoroutine(block.StartExecution());
         }
 
-        #region -- Module command methods --
-        private Dictionary<string, IDialogueCommand> _modCmds;
+        public void StartBlock(IDialogueBlock block) {
+            if (_currentBlockCoroutine != null)
+                StopCoroutine(_currentBlockCoroutine);
+            _currentBlockCoroutine = StartCoroutine(block.StartExecution());
+        }
 
-        
+        #region -- Module command methods --
+        private Dictionary<string, IGenericModuleCommand> _modCmds;
+
+        private void InitializeModuleCmds() {
+            _modCmds = new Dictionary<string, IGenericModuleCommand>();
+            Type itfType;
+            foreach (var pair in Modules) {
+                itfType = pair.Key;
+                foreach (var method in itfType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+                    if (method.IsDefined(typeof(ModuleCmdAttribute), true)) {
+                        var attr = method.GetCustomAttribute<ModuleCmdAttribute>();
+                        GenericModuleCommand cmd = new GenericModuleCommand(pair.Value, method);
+                        string cmdName = string.IsNullOrEmpty(attr.CmdName) ? method.Name : attr.CmdName;
+                        _modCmds.Add(cmdName, cmd);
+                    }
+                }
+            }
+        }
         #endregion
     }
 
-    public class GenericModuleCommand : DefaultCommand {
-        private IGameModule _module;
-        private MethodInfo _method;
-
-        public GenericModuleCommand(IGameModule module, MethodInfo method) {
-            _module = module;
-            _method = method;
-        }
-
-        public override IEnumerator Execute() {
-            if (typeof(IEnumerator).IsAssignableFrom(_method.ReturnType)) {
-                _method.Invoke(_module, new object[0]);
-                return null;
-            } else {
-                return (IEnumerator)_method.Invoke(_module, new object[0]);
-            }
-        }
-    }
+  
 }

@@ -8,7 +8,7 @@ namespace ModuleBased.Example.Dialogue {
         public IDialogueBlock Parent { get; set; }
 
         public virtual IEnumerator Execute() {
-            return null;
+            yield return null;
         }
 
         public virtual void OnEnd() {

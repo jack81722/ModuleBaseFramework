@@ -216,12 +216,12 @@ namespace ModuleBased {
         #endregion
 
         #region -- IEnumerable --
-        public IEnumerator<IGameModule> GetEnumerator() {
-            return _modules.Values.GetEnumerator();
+        public IEnumerator<KeyValuePair<Type, IGameModule>> GetEnumerator() {
+            return _modules.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return _modules.Values.GetEnumerator();
+            return _modules.GetEnumerator();
         }
         #endregion
     }

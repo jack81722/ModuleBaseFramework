@@ -4,33 +4,32 @@ using System.Linq;
 using UnityEngine;
 
 namespace ModuleBased.Dialogue {
-    public class ParallelDialogueBlock : IDialogueBlock, IDialogueCommand {
+    /// <summary>
+    /// Executing commands parallely
+    /// </summary>
+    public sealed class ParallelDialogueBlock : IDialogueBlock, IDialogueCommand {
         private List<IDialogueCommand> _commands;
 
         public ParallelDialogueBlock() {
             _commands = new List<IDialogueCommand>();
         }
 
+        #region -- IDialogueCommand --
         public IDialogueBlock Parent { get; set; }
 
-        public void AddCommand(IDialogueCommand cmd) {
-            _commands.Add(cmd);
-        }
-
+       
         public IEnumerator Execute() {
             return StartExecution();
         }
 
-        public bool Next() {
-            return false;
-        }
+        public void OnEnd() { }
 
-        public void OnEnd() {
-            //Parent.Next();
-        }
+        public void OnStart() { }
+        #endregion
 
-        public void OnStart() {
-            //StartExecution();
+        #region -- IDialogueBlock --
+        public void AddCommand(IDialogueCommand cmd) {
+            _commands.Add(cmd);
         }
 
         public IEnumerator StartExecution() {
@@ -44,7 +43,7 @@ namespace ModuleBased.Dialogue {
             while (running) {
                 running = false;
                 foreach (var e in enumerators) {
-                    running |= e.MoveNext();
+                    running |= (e != null && e.MoveNext());
                 }
                 yield return null;
             }
@@ -53,5 +52,10 @@ namespace ModuleBased.Dialogue {
                 cmd.OnEnd();
             }
         }
+
+        public bool Next() {
+            return false;
+        }
+        #endregion
     }
 }

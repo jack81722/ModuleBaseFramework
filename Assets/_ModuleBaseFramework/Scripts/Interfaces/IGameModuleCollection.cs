@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace ModuleBased {
-    public interface IGameModuleCollection : IEnumerable, IEnumerable<IGameModule> {
+    public interface IGameModuleCollection : IEnumerable, IEnumerable<KeyValuePair<Type, IGameModule>> {
         IGameModule AddModule(Type itfType, Type instType);
 
         void AddModule(Type itfType, IGameModule mod);
