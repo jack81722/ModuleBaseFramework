@@ -26,7 +26,7 @@ namespace ModuleBased.Example.Dialogue {
 
         public void OnModuleStart() {
             InitializeModuleCmds();
-            Test();
+            //Test();
         }
         #endregion
 
@@ -39,13 +39,13 @@ namespace ModuleBased.Example.Dialogue {
 
         private void Test() {
             var block = CreateBlock("test");
-            block.AddCommand(new SayCommand("Coinmouse", "Hello XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
+            block.AddCommand(new SayCommand("Coinmouse", "Hello\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
             var parallel = new ParallelDialogueBlock();
             parallel.AddCommand(CreateModuleCommand("SetWeather", EWeatherState.Rain));
             parallel.AddCommand(new SayCommand("Coinmouse", "............................................."));
             block.AddCommand(parallel);
             //block.AddCommand(CreateModuleCommand("SetRain"));
-            block.AddCommand(new WaitSecondCommand() { WaitSecond = 2 });
+            //block.AddCommand(new WaitSecondCommand() { WaitSecond = 2 });
             block.AddCommand(new SayCommand("Coinmouse", "OMG"));
             StartBlock(block);
         }

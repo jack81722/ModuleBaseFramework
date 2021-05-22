@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2122342140906951246}
   - component: {fileID: 4212551864802844907}
   m_Layer: 5
-  m_Name: SayDialog
+  m_Name: SayDialogue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,6 +84,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &2122342140906951246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,6 +117,15 @@ MonoBehaviour:
   UImg_CharBanner: {fileID: 7722540048766712790}
   UTxt_CharName: {fileID: 6142730803879456887}
   UTxt_Say: {fileID: 2122342141113886503}
+  UIElements:
+  - {fileID: 2122342141099895352}
+  - {fileID: 2122342141330859902}
+  - {fileID: 2122342141113886503}
+  - {fileID: 7722540048766712790}
+  - {fileID: 6142730803879456887}
+  FadeOutOnEnd: 1
+  FadeEazeType: 1
+  FadeDuration: 1
 --- !u!1 &2122342141099895354
 GameObject:
   m_ObjectHideFlags: 0
@@ -178,6 +188,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -253,6 +264,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -287,6 +299,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4212551864802844907}
+        m_TargetAssemblyTypeName: 
         m_MethodName: Listen_OnClick
         m_Mode: 1
         m_Arguments:
@@ -357,6 +370,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -431,6 +445,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -510,6 +525,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 0.9245283, g: 0.9245283, b: 0.9245283, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

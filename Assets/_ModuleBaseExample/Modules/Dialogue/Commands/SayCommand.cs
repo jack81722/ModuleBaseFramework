@@ -28,18 +28,19 @@ namespace ModuleBased.Example.Dialogue {
             }
         }
 
-        public override void OnEnd() {
+        private void ClickCallback() {
             if (_isFinished) {
                 SayDialogue.Singleton.Close();
                 _isClosed = true;
-            } else {
+            }
+            else {
                 _isFinished = true;
             }
         }
 
         public override void OnStart() {
             Reset();
-            SayDialogue.Singleton.BeginSay(CharName, _sayText, OnEnd);
+            SayDialogue.Singleton.BeginSay(CharName, _sayText, ClickCallback);
         }
 
         public void Reset() {
