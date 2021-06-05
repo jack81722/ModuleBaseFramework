@@ -23,22 +23,15 @@ namespace ModuleBased.ForUnity {
             }
         }
 
+        private IGameCore _core;
+
         private ILogger _logger;
 
-        /// <summary>
-        /// Collection of modules
-        /// </summary>
-        public IGameModuleCollection Modules { get; private set; }
-
-        /// <summary>
-        /// Collection of views
-        /// </summary>
-        public IGameViewCollection Views { get; private set; }
-
-        /// <summary>
-        /// Collection of data access objects
-        /// </summary>
-        public IGameDaoCollection Daos { get; private set; }
+        public IGameModuleCollection Modules => _core.Modules;
+        
+        public IGameViewCollection Views => _core.Views;
+        
+        public IGameDaoCollection Daos => _core.Daos;
 
         public ScriptableObject[] CustomDaos;
 
@@ -65,16 +58,11 @@ namespace ModuleBased.ForUnity {
             }
         }
 
-        private void InitializeCore() {
-            // initialize core
-            _logger = new UniLogger();
-            IModuleProxyFactory proxyFactory = new NoneModuleProxyFactory();
-            var ddaoc = new DefaultGameDaoCollection();
-            Daos = ddaoc;
-            var dgmc = new DefaultGameModuleCollection(Daos, _logger, proxyFactory);
-            Modules = dgmc;
-            var dgvc = new DefaultGameViewCollection(_logger, dgmc);
-            Views = dgvc;
+        public void InitializeCore() {
+            if(_logger == null)
+                _logger = new UniLogger();
+            if(_core == null)
+                _core = new GameCore(_logger, true);
         }
 
         private void AddAndInitializeDaos() {
@@ -95,7 +83,7 @@ namespace ModuleBased.ForUnity {
                 if (attr != null)
                     Modules.AddModule(attr.ItfType, module);
             }
-            Modules.InitializeModules();
+            _core.InitializeCore();
         }
 
         private void AddAndInitializeViews() {
@@ -107,8 +95,13 @@ namespace ModuleBased.ForUnity {
             Views.InitializeViews();
         }
 
+        public void StartCore()
+        {
+            _core.StartCore();
+        }
+
         private void Start() {
-            Modules.StartModules();
+            StartCore();
         }
         
         /// <summary>

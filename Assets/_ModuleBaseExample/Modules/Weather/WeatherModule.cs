@@ -11,6 +11,7 @@ namespace ModuleBased.Example {
         public ParticleSystem RainEffect;
 
         public delegate void SetWeatherHandler();
+
         [ModuleEvent]
         public event SetWeatherHandler OnSetWeather;
 
@@ -85,6 +86,7 @@ namespace ModuleBased.Example {
     }
 
     public interface IWeatherModule {
+        [SimpleLog]
         [ModuleCmd]
         void SetWeather(EWeatherState state);
 

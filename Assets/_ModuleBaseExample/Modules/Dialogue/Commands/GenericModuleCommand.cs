@@ -1,15 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
 namespace ModuleBased.Example.Dialogue {
     public class GenericModuleCommand : DefaultCommand, IGenericModuleCommand {
-        private IGameModule _module;
+        private object _module;
         private MethodInfo _method;
         private object[] _params;
 
-        public GenericModuleCommand(IGameModule module, MethodInfo method) {
+        public GenericModuleCommand(object module, MethodInfo method) {
             _module = module;
             _method = method;
         }

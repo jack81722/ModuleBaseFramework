@@ -99,13 +99,11 @@ namespace ModuleBased.Example.Dialogue {
 
         private void InitializeModuleCmds() {
             _modCmds = new Dictionary<string, IGenericModuleCommand>();
-            Type itfType;
-            foreach (var pair in Modules) {
-                itfType = pair.Key;
+            foreach (Type itfType in Modules.GetInterfaceTypes()) {
                 foreach (var method in itfType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
                     if (method.IsDefined(typeof(ModuleCmdAttribute), true)) {
                         var attr = method.GetCustomAttribute<ModuleCmdAttribute>();
-                        GenericModuleCommand cmd = new GenericModuleCommand(pair.Value, method);
+                        GenericModuleCommand cmd = new GenericModuleCommand(Modules.GetModule(itfType), method);
                         string cmdName = string.IsNullOrEmpty(attr.CmdName) ? method.Name : attr.CmdName;
                         _modCmds.Add(cmdName, cmd);
                     }

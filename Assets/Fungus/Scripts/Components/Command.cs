@@ -72,7 +72,8 @@ namespace Fungus
             referencedVariables.Clear();
         }
 
-        public virtual string CommandName() {
+        public virtual string CommandName()
+        {
             return null;
         }
 #endif

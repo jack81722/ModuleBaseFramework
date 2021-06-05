@@ -52,8 +52,6 @@ namespace Fungus.EditorUtils
 
         protected override void PrepareAllItems()
         {
-            if (allItems == null)
-                allItems = new List<FilteredListItem>();
             int i = 0;
             foreach (System.Type type in EventHandlerTypes)
             {
@@ -61,13 +59,13 @@ namespace Fungus.EditorUtils
                 if (info != null)
                 {
                     allItems.Add(new FilteredListItem(i, (info.Category.Length > 0 ? info.Category + CATEGORY_CHAR : "") + info.EventHandlerName, info.HelpText));
-                 
-                } else {
-                    Debug.Log($"{allItems == null}, {type == null}, {info == null}");
+                }
+                else
+                {
                     allItems.Add(new FilteredListItem(i, type.Name, info.HelpText));
                 }
-                i++;
 
+                i++;
             }
         }
         
