@@ -11,7 +11,7 @@ namespace ModuleBased.AOP.Attributes
     /// Log method name before/after method execute
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method)]
-    public class SimpleLogAttribute : Attribute, IModuleProxyAttribute, IModuleProxyExceptionAttribute
+    public class SimpleLogAttribute : Attribute, IModuleProxyBeforeAttribute, IModuleProxyAfterAttribute, IModuleProxyExceptionAttribute
     {
         private bool _logError;
 

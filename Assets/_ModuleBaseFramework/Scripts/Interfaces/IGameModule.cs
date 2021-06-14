@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 namespace ModuleBased {
     public interface IGameModule {
+        ILogger Logger { get; set; }
+
         IGameModuleCollection Modules { get; set; }
 
         void OnModuleInitialize();

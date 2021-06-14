@@ -14,12 +14,15 @@ namespace ModuleBased.Example.Dialogue {
     public class DialogueModule : MonoBehaviour, IGameModule, IDialogueModule {
         private Dictionary<string, IDialogueBlock> _blockCache;
         private Coroutine _currentBlockCoroutine;
-        public IGameModuleCollection Modules { get; set; }
+
 
         [RequireDao]
         private IDialogueDao _dialogueDao;
 
         #region -- IGameModule --
+        public IGameModuleCollection Modules { get; set; }
+        public ILogger Logger { get; set; }
+
         public void OnModuleInitialize() {
             _blockCache = new Dictionary<string, IDialogueBlock>();
         }

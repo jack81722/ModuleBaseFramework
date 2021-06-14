@@ -9,9 +9,11 @@ namespace ModuleBased
 {
     public class GameCore : IGameCore
     {
+        #region -- IGameCore properties --
         public IGameModuleCollection Modules { get; }
         public IGameViewCollection Views { get; }
         public IGameDaoCollection Daos { get; }
+        #endregion
 
         /// <summary>
         /// Flag of all modules initialized
@@ -66,6 +68,7 @@ namespace ModuleBased
                 return;
             foreach (var mod in Modules)
             {
+                AssignLogger(mod);
                 InitializeModule(mod);
             }
             AssignRequiredModules();
@@ -112,6 +115,11 @@ namespace ModuleBased
         #endregion
 
         #region -- Assign required element methods --
+        private void AssignLogger(IGameModule module)
+        {
+            module.Logger = _logger;
+        }
+
         private void AssignRequiredModules()
         {
             foreach (var modInst in Modules)
@@ -183,6 +191,7 @@ namespace ModuleBased
         {   
             if (_isInit)
             {
+                AssignLogger(mod);
                 InitializeModule(mod);
                 AssignRequiredModule(mod.GetType(), mod);
                 AssignRequiredDao(mod.GetType(), mod);
@@ -193,13 +202,5 @@ namespace ModuleBased
             }
         }
         #endregion
-    }
-
-    public class f : IFormatProvider
-    {
-        public object GetFormat(Type formatType)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

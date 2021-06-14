@@ -27,13 +27,18 @@ namespace ModuleBased.ForUnity {
 
         private ILogger _logger;
 
+        #region -- IGameCore properties --
         public IGameModuleCollection Modules => _core.Modules;
         
         public IGameViewCollection Views => _core.Views;
         
         public IGameDaoCollection Daos => _core.Daos;
+        #endregion
 
+        #region -- Public fields --
+        public bool UseProxy;
         public ScriptableObject[] CustomDaos;
+        #endregion
 
         /// <summary>
         /// Setup singleton, core, modules, and views
@@ -62,7 +67,7 @@ namespace ModuleBased.ForUnity {
             if(_logger == null)
                 _logger = new UniLogger();
             if(_core == null)
-                _core = new GameCore(_logger, true);
+                _core = new GameCore(_logger, UseProxy);
         }
 
         private void AddAndInitializeDaos() {

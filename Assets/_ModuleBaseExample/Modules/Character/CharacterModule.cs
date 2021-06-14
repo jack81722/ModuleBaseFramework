@@ -14,6 +14,8 @@ namespace ModuleBased.Example {
 
         #region -- IGameModule --
         public IGameModuleCollection Modules { get; set; }
+        public ILogger Logger { get; set; }
+
         public void OnModuleInitialize() {
 
         }

@@ -7,7 +7,8 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Proxies;
 
-namespace ModuleBased.AOP {
+namespace ModuleBased.AOP
+{
     /// <summary>
     /// Instance type of proxy to handle module
     /// </summary>
@@ -24,19 +25,23 @@ namespace ModuleBased.AOP {
         }
 
         #region -- Cached attributes --
-        private Dictionary<MethodInfo, List<IModuleProxyAttribute>> _methodAttrs;
+        private Dictionary<MethodInfo, List<IModuleProxyBeforeAttribute>> _beforeAttrs;
+        private Dictionary<MethodInfo, List<IModuleProxyAfterAttribute>> _afterAttrs;
         private Dictionary<MethodInfo, List<IModuleProxyExceptionAttribute>> _exceptionAttrs;
         #endregion
 
-        public ModuleProxy(Type itfType, object obj, ILogger logger) : base(itfType) {
+        public ModuleProxy(Type itfType, object obj, ILogger logger) : base(itfType)
+        {
             this.logger = logger;
             _wrappedObj = obj;
             ItfType = itfType;
-            _methodAttrs = new Dictionary<MethodInfo, List<IModuleProxyAttribute>>();
+            _beforeAttrs = new Dictionary<MethodInfo, List<IModuleProxyBeforeAttribute>>();
+            _afterAttrs = new Dictionary<MethodInfo, List<IModuleProxyAfterAttribute>>();
             _exceptionAttrs = new Dictionary<MethodInfo, List<IModuleProxyExceptionAttribute>>();
             foreach (var method in itfType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
-                CacheBAAttributes(method);
+                CacheBeforeAttributes(method);
+                CacheAfterAttributes(method);
                 CacheExcepAttributes(method);
             }
         }
@@ -46,10 +51,10 @@ namespace ModuleBased.AOP {
             IMethodCallMessage callMethod = msg as IMethodCallMessage;
             MethodInfo targetMethod = callMethod.MethodBase as MethodInfo;
             IMethodReturnMessage returnMethod = null;
-            var attrs = GetBAAttributes(targetMethod);
+            var beforeAttrs = GetBeforeAttributes(targetMethod);
             if (targetMethod != null)
             {
-                HandleBeforeExecuting(targetMethod, callMethod.Args, attrs);
+                HandleBeforeExecuting(targetMethod, callMethod.Args, beforeAttrs);
                 object result;
                 try
                 {
@@ -57,35 +62,54 @@ namespace ModuleBased.AOP {
                     returnMethod = new ReturnMessage(result, null, 0,
                         callMethod.LogicalCallContext, callMethod);
                 }
-                catch(Exception e)
-                {   
+                catch (Exception e)
+                {
                     var excepAttrs = GetExcepAttributes(targetMethod);
                     HandleExcpetion(targetMethod, e, excepAttrs);
                     returnMethod = new ReturnMessage(e, callMethod);
                     return returnMethod;
                 }
+                var afterAttrs = GetAfterAttributes(targetMethod);
                 // after executing will ignore if throw exception
-                HandleAfterExecuteing(targetMethod, callMethod.Args, result, attrs);
+                HandleAfterExecuteing(targetMethod, callMethod.Args, result, afterAttrs);
             }
             return returnMethod;
         }
 
         #region -- Attribute methods --
-        protected IEnumerable<IModuleProxyAttribute> GetBAAttributes(MethodInfo method)
+        protected IEnumerable<IModuleProxyBeforeAttribute> GetBeforeAttributes(MethodInfo method)
         {
-            if (!_methodAttrs.TryGetValue(method, out List<IModuleProxyAttribute> list))
+            if (!_beforeAttrs.TryGetValue(method, out List<IModuleProxyBeforeAttribute> list))
             {
-                list =  CacheBAAttributes(method);
+                list = CacheBeforeAttributes(method);
             }
             return list;
         }
 
-        protected List<IModuleProxyAttribute> CacheBAAttributes(MethodInfo method)
+        protected List<IModuleProxyBeforeAttribute> CacheBeforeAttributes(MethodInfo method)
         {
             var allAttrs = method.GetCustomAttributes();
-            var attrs = allAttrs.OfType<IModuleProxyAttribute>();
-            var list = new List<IModuleProxyAttribute>(attrs);
-            _methodAttrs.Add(method, list);
+            var attrs = allAttrs.OfType<IModuleProxyBeforeAttribute>();
+            var list = new List<IModuleProxyBeforeAttribute>(attrs);
+            _beforeAttrs.Add(method, list);
+            return list;
+        }
+
+        protected IEnumerable<IModuleProxyAfterAttribute> GetAfterAttributes(MethodInfo method)
+        {
+            if (!_afterAttrs.TryGetValue(method, out List<IModuleProxyAfterAttribute> list))
+            {
+                list = CacheAfterAttributes(method);
+            }
+            return list;
+        }
+
+        protected List<IModuleProxyAfterAttribute> CacheAfterAttributes(MethodInfo method)
+        {
+            var allAttrs = method.GetCustomAttributes();
+            var attrs = allAttrs.OfType<IModuleProxyAfterAttribute>();
+            var list = new List<IModuleProxyAfterAttribute>(attrs);
+            _afterAttrs.Add(method, list);
             return list;
         }
 
@@ -109,7 +133,7 @@ namespace ModuleBased.AOP {
         #endregion
 
         #region -- Invoke before/after handlers --
-        protected virtual void HandleBeforeExecuting(MethodInfo method, object[] args, IEnumerable<IModuleProxyAttribute> attrs)
+        protected virtual void HandleBeforeExecuting(MethodInfo method, object[] args, IEnumerable<IModuleProxyBeforeAttribute> attrs)
         {
             foreach (var attr in attrs)
             {
@@ -117,21 +141,22 @@ namespace ModuleBased.AOP {
                 {
                     attr.OnBefore(method, args, logger);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     logger.LogError(e);
                 }
             }
         }
 
-        protected virtual void HandleAfterExecuteing(MethodInfo method, object[] args, object result, IEnumerable<IModuleProxyAttribute> attrs)
+        protected virtual void HandleAfterExecuteing(MethodInfo method, object[] args, object result, IEnumerable<IModuleProxyAfterAttribute> attrs)
         {
             foreach (var attr in attrs)
             {
                 try
                 {
                     attr.OnAfter(method, args, result, logger);
-                }catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogError(e);
                 }
@@ -147,7 +172,7 @@ namespace ModuleBased.AOP {
                     attr.OnException(method, e, logger);
 
                 }
-                catch(Exception ie) // internal exception
+                catch (Exception ie) // internal exception
                 {
                     logger.LogError(ie);
                 }
@@ -157,6 +182,20 @@ namespace ModuleBased.AOP {
 
         #region -- IGameModule methods --
         public IGameModuleCollection Modules { get; set; }
+        public ILogger Logger
+        {
+            get
+            {
+                return logger;
+            }
+            set
+            {
+                logger = value;
+                IGameModule mod = _wrappedObj as IGameModule;
+                if (mod != null)
+                    mod.Logger = logger;
+            }
+        }
 
         public void OnModuleInitialize()
         {
@@ -183,7 +222,8 @@ namespace ModuleBased.AOP {
     /// <summary>
     /// Instance type of proxy to handle module
     /// </summary>
-    public class ModuleProxy<T> : ModuleProxy where T : class {
+    public class ModuleProxy<T> : ModuleProxy where T : class
+    {
         public ModuleProxy(T obj, ILogger logger) : base(typeof(T), obj, logger) { }
     }
 }
