@@ -10,7 +10,7 @@ namespace ModuleBased.Example.Dialogue {
     /// <summary>
     /// Dialogue Module is a view module
     /// </summary>
-    [ModuleItf(typeof(IDialogueModule))]
+    [UniModule(typeof(IDialogueModule))]
     public class DialogueModule : MonoBehaviour, IGameModule, IDialogueModule {
         private Dictionary<string, IDialogueBlock> _blockCache;
         private Coroutine _currentBlockCoroutine;
@@ -23,11 +23,11 @@ namespace ModuleBased.Example.Dialogue {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void OnModuleInitialize() {
+        public void InitializeModule() {
             _blockCache = new Dictionary<string, IDialogueBlock>();
         }
 
-        public void OnModuleStart() {
+        public void StartModule() {
             InitializeModuleCmds();
             //Test();
         }
@@ -112,6 +112,11 @@ namespace ModuleBased.Example.Dialogue {
                     }
                 }
             }
+        }
+
+        public void OnRemoved()
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }

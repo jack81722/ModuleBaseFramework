@@ -14,27 +14,25 @@ namespace ModuleBased.AOP.Collections
     public class GameModuleProxyCollection : IGameModuleCollection
     {
         private Dictionary<Type, ModuleProxy> _proxies;
-        private List<IGameModule> _modules;
+        private Dictionary<Type, IGameModule> _modules;
         private ILogger _logger;
 
         private IModuleProxyFactory _proxyFactory;
-
-        public event ModuleHandler OnModuleAdded;
 
         public GameModuleProxyCollection(ILogger logger, IModuleProxyFactory proxyFactory)
         {
             _logger = logger;
             _proxies = new Dictionary<Type, ModuleProxy>();
-            _modules = new List<IGameModule>();
+            _modules = new Dictionary<Type, IGameModule>();
             _proxyFactory = proxyFactory;
         }
 
         #region -- Add module methods --
-        public void AddModule<TItf, TMod>()
+        public IGameModule AddModule<TItf, TMod>()
             where TItf : class
             where TMod : IGameModule, TItf
         {
-            AddModule(typeof(TItf), typeof(TMod));
+            return AddModule(typeof(TItf), typeof(TMod));
         }
 
         public void AddModule<TItf>(IGameModule mod) where TItf : class
@@ -42,11 +40,12 @@ namespace ModuleBased.AOP.Collections
             AddModule(typeof(TItf), mod);
         }
 
-        public void AddModule(Type itfType, Type modType)
+        public IGameModule AddModule(Type itfType, Type modType)
         {
             CheckModuleType(modType);
             IGameModule mod = (IGameModule)Activator.CreateInstance(modType);
             AddModule(itfType, mod);
+            return mod;
         }
 
         public void AddModule(Type itfType, IGameModule mod)
@@ -57,7 +56,7 @@ namespace ModuleBased.AOP.Collections
                 throw new ArgumentException($"Module({modType.Name}) is not implemented by interface({itfType.Name}).");
             var proxy = WrapModule(itfType, mod);
             _proxies.Add(itfType, proxy);
-            _modules.Add(mod);
+            _modules.Add(itfType, mod);
             InvokeAddedEvent(itfType, mod);
         }
         #endregion
@@ -96,6 +95,11 @@ namespace ModuleBased.AOP.Collections
             return result;
         }
 
+        public IEnumerable<KeyValuePair<Type, IGameModule>> GetAllModules()
+        {
+            return _modules;
+        }
+
         public IEnumerable<Type> GetInterfaceTypes()
         {
             return _proxies.Keys;
@@ -129,7 +133,6 @@ namespace ModuleBased.AOP.Collections
             try
             {
                 mod.Modules = this;
-                OnModuleAdded?.Invoke(itfType, mod);
             }
             catch (Exception e)
             {
@@ -141,13 +144,15 @@ namespace ModuleBased.AOP.Collections
         #region -- IEnumerable --
         public IEnumerator<IGameModule> GetEnumerator()
         {
-            return _modules.GetEnumerator();
+            return _modules.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _modules.GetEnumerator();
         }
+
+        
         #endregion
     }
 }

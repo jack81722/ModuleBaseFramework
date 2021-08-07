@@ -197,18 +197,25 @@ namespace ModuleBased.AOP
             }
         }
 
-        public void OnModuleInitialize()
+        public void InitializeModule()
         {
             var mod = _wrappedObj as IGameModule;
             if (mod != null)
-                mod.OnModuleInitialize();
+                mod.InitializeModule();
         }
 
-        public void OnModuleStart()
+        public void StartModule()
         {
             var mod = _wrappedObj as IGameModule;
             if (mod != null)
-                mod.OnModuleStart();
+                mod.StartModule();
+        }
+
+        public void OnRemoved()
+        {
+            var mod = _wrappedObj as IGameModule;
+            if (mod != null)
+                mod.OnRemoved();
         }
         #endregion
 
@@ -216,6 +223,8 @@ namespace ModuleBased.AOP
         {
             return fromType == typeof(IGameModule) || fromType == ItfType;
         }
+
+        
     }
 
 

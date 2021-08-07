@@ -4,7 +4,7 @@ using ModuleBased.Dialogue;
 using UnityEngine;
 
 namespace ModuleBased.Example {
-    [ModuleItf(typeof(IWeatherModule))]
+    [UniModule(typeof(IWeatherModule))]
     public class WeatherModule : MonoBehaviour, IGameModule, IWeatherModule {
         public EWeatherState WeatherState;
 
@@ -19,11 +19,11 @@ namespace ModuleBased.Example {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void OnModuleInitialize() {
+        public void InitializeModule() {
             WeatherState = EWeatherState.Sunny;
         }
 
-        public void OnModuleStart() {
+        public void StartModule() {
 
         }
         #endregion
@@ -74,6 +74,11 @@ namespace ModuleBased.Example {
         [ModuleCmd]
         public void SetWindy() {
             SetWeather(EWeatherState.Windy);
+        }
+
+        public void OnRemoved()
+        {
+            throw new System.NotImplementedException();
         }
         #endregion
     }

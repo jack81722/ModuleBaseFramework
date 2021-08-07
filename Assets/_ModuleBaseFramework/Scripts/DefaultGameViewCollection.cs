@@ -29,6 +29,7 @@ namespace ModuleBased {
                 view.Logger = _logger;
                 view.Modules = _modules;
                 AssignRequiredModulesToView(view);
+                view.InitializeView();
             }
         }
 

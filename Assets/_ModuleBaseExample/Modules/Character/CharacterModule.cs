@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModuleBased.Example {
-    [ModuleItf(typeof(ICharacterModule))]
+    [UniModule(typeof(ICharacterModule))]
     public class CharacterModule : MonoBehaviour, IGameModule, ICharacterModule {
         [SerializeField]
         private GameObject _a;
@@ -16,11 +16,11 @@ namespace ModuleBased.Example {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void OnModuleInitialize() {
+        public void InitializeModule() {
 
         }
 
-        public void OnModuleStart() {
+        public void StartModule() {
 
         }
         #endregion
@@ -47,6 +47,11 @@ namespace ModuleBased.Example {
         [ModuleCmd]
         public void MoveBToDestination() {
 
+        }
+
+        public void OnRemoved()
+        {
+            throw new System.NotImplementedException();
         }
         #endregion
     }

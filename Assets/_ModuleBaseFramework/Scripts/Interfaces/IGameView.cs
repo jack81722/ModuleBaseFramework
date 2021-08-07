@@ -6,6 +6,6 @@ namespace ModuleBased {
         ILogger Logger { get; set; }
         IGameModuleCollection Modules { get; set; }
 
-        void OnViewInitiailize();
+        void InitializeView();
     }
 }

@@ -7,21 +7,31 @@ namespace ModuleBased {
 
     public interface IGameModuleCollection : IEnumerable, IEnumerable<IGameModule> {
         /// <summary>
-        /// Event of module added
-        /// </summary>
-        event ModuleHandler OnModuleAdded;
-
-        /// <summary>
         /// Added module by interface key
         /// </summary>
-        void AddModule(Type itfType, Type instType);
+        IGameModule AddModule(Type itfType, Type modType);
 
         void AddModule(Type itfType, IGameModule mod);
 
-        void AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf;
+        IGameModule AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf;
 
         void AddModule<TItf>(IGameModule mod) where TItf : class;
 
+        object GetModule(Type itfType);
+
+        TItf GetModule<TItf>() where TItf : class;
+
+        bool TryGetModule<TItf>(out TItf mod) where TItf : class;
+
+        bool TryGetModule(Type itfType, out object mod);
+
+        IEnumerable<KeyValuePair<Type, IGameModule>> GetAllModules();
+
+        IEnumerable<Type> GetInterfaceTypes();
+    }
+
+    public interface IReadOnlyGameModuleCollection
+    {
         object GetModule(Type itfType);
 
         TItf GetModule<TItf>() where TItf : class;

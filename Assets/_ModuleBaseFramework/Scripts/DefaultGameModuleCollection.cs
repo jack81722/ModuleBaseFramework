@@ -12,8 +12,6 @@ namespace ModuleBased
         private Dictionary<Type, IGameModule> _modules;
         private ILogger _logger;
 
-        public event ModuleHandler OnModuleAdded;
-
         public DefaultGameModuleCollection(ILogger logger)
         {
             _logger = logger;
@@ -21,11 +19,11 @@ namespace ModuleBased
         }
 
         #region -- Add module methods --
-        public void AddModule<TItf, TMod>()
+        public IGameModule AddModule<TItf, TMod>()
             where TItf : class
             where TMod : IGameModule, TItf
         {
-            AddModule(typeof(TItf), typeof(TMod));
+            return (TMod)AddModule(typeof(TItf), typeof(TMod));
         }
 
         public void AddModule<TItf>(IGameModule mod) where TItf : class
@@ -33,11 +31,12 @@ namespace ModuleBased
             AddModule(typeof(TItf), mod);
         }
 
-        public void AddModule(Type itfType, Type modType)
-        {  
+        public IGameModule AddModule(Type itfType, Type modType)
+        {
             CheckModuleType(modType);
             IGameModule mod = (IGameModule)Activator.CreateInstance(modType);
             AddModule(itfType, mod);
+            return mod;
         }
 
         public void AddModule(Type itfType, IGameModule mod)
@@ -81,6 +80,11 @@ namespace ModuleBased
             return result;
         }
 
+        public IEnumerable<KeyValuePair<Type, IGameModule>> GetAllModules()
+        {
+            return _modules;
+        }
+
         public IEnumerable<Type> GetInterfaceTypes()
         {
             return _modules.Keys;
@@ -109,9 +113,8 @@ namespace ModuleBased
             try
             {
                 mod.Modules = this;
-                OnModuleAdded?.Invoke(itfType, mod);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logger.LogError(e);
             }
@@ -131,5 +134,5 @@ namespace ModuleBased
         #endregion
     }
 
-    
+
 }

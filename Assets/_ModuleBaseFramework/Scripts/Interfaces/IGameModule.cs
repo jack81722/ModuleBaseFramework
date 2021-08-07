@@ -7,7 +7,7 @@ namespace ModuleBased {
 
         IGameModuleCollection Modules { get; set; }
 
-        void OnModuleInitialize();
+        void InitializeModule();
 
         /// <summary>
         /// Start module after all module initialized
@@ -15,6 +15,8 @@ namespace ModuleBased {
         /// <remarks>
         /// Module can use other module here
         /// </remarks>
-        void OnModuleStart();
+        void StartModule();
+
+        void OnRemoved();
     }
 }

@@ -19,11 +19,13 @@ namespace ModuleBased
         /// Flag of all modules initialized
         /// </summary>
         private bool _isInit;
+        public bool IsInitialized => _isInit;
 
         /// <summary>
         /// Flag of all modules started
         /// </summary>
         private bool _isStart;
+        public bool IsStarted => _isStart;
 
         /// <summary>
         /// Logger
@@ -43,7 +45,6 @@ namespace ModuleBased
             }
             else
                 Modules = new DefaultGameModuleCollection(logger);
-            Modules.OnModuleAdded += Listen_OnModuleAdded;
             Views = new DefaultGameViewCollection(logger, Modules);
         }
 
@@ -51,18 +52,18 @@ namespace ModuleBased
         {
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
-            if(proxyFactory != null)
+            if (proxyFactory != null)
             {
                 Modules = new GameModuleProxyCollection(logger, proxyFactory);
-            }else
+            }
+            else
                 Modules = new DefaultGameModuleCollection(logger);
-            Modules.OnModuleAdded += Listen_OnModuleAdded;
             Views = new DefaultGameViewCollection(logger, Modules);
         }
         #endregion
 
         #region -- Initialize methods --
-        public void InitializeCore()
+        public void InstatiateCore()
         {
             if (_isInit)
                 return;
@@ -80,7 +81,7 @@ namespace ModuleBased
         {
             try
             {
-                module.OnModuleInitialize();
+                module.InitializeModule();
             }
             catch (Exception e)
             {
@@ -105,7 +106,7 @@ namespace ModuleBased
         {
             try
             {
-                module.OnModuleStart();
+                module.StartModule();
             }
             catch (Exception e)
             {
@@ -123,7 +124,7 @@ namespace ModuleBased
         private void AssignRequiredModules()
         {
             foreach (var modInst in Modules)
-            {   
+            {
                 Type modType = modInst.GetType();
                 AssignRequiredModule(modType, modInst);
             }
@@ -156,7 +157,7 @@ namespace ModuleBased
         private void AssigneRequiredDaos()
         {
             foreach (var modInst in Modules)
-            {   
+            {
                 Type modType = modInst.GetType();
                 AssignRequiredDao(modType, modInst);
             }
@@ -186,9 +187,36 @@ namespace ModuleBased
         }
         #endregion
 
-        #region -- Listen event methods --
-        private void Listen_OnModuleAdded(Type itfType, IGameModule mod)
-        {   
+        #region -- Add/Remove module methods --
+        /// <summary>
+        /// Added module by interface key
+        /// </summary>
+        public void AddModule(Type itfType, Type modType)
+        {
+            IGameModule mod = Modules.AddModule(itfType, modType);
+            CheckInitializeAndStart(mod);
+        }
+
+        public void AddModule(Type itfType, IGameModule mod)
+        {
+            Modules.AddModule(itfType, mod);
+            CheckInitializeAndStart(mod);
+        }
+
+        public void AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf
+        {
+            IGameModule mod = Modules.AddModule<TItf, TMod>();
+            CheckInitializeAndStart(mod);
+        }
+
+        public void AddModule<TItf>(IGameModule mod) where TItf : class
+        {
+            Modules.AddModule<TItf>(mod);
+            CheckInitializeAndStart(mod);
+        }
+
+        private void CheckInitializeAndStart(IGameModule mod)
+        {
             if (_isInit)
             {
                 AssignLogger(mod);
