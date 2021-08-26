@@ -210,13 +210,6 @@ namespace ModuleBased.AOP
             if (mod != null)
                 mod.StartModule();
         }
-
-        public void OnRemoved()
-        {
-            var mod = _wrappedObj as IGameModule;
-            if (mod != null)
-                mod.OnRemoved();
-        }
         #endregion
 
         public bool CanCastTo(Type fromType, object o)

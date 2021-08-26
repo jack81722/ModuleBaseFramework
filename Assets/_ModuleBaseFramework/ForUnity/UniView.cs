@@ -33,6 +33,11 @@ namespace ModuleBased.ForUnity
 
         public void InitializeView()
         {
+            foreach(var child in childList)
+            {
+                var childView = child as UniView;
+                childView.InitializeView();
+            }
             try
             {
                 OnInitializeView();
