@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ModuleBased
+namespace ModuleBased.Rx
 {
     public interface IObserver<T>
     {
@@ -11,10 +11,6 @@ namespace ModuleBased
         void OnComplete(T result);
     }
 
-    public interface IObservable<T>
-    {
-        IDisposable Subscribe(IObserver<T> observable);
-    }
 
     public static class ObservableUtils
     {

@@ -1,4 +1,5 @@
 using ModuleBased.ForUnity;
+using ModuleBased.Rx;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +8,8 @@ using UnityEngine;
 
 namespace ModuleBased
 {
-    public class ScheduleModule : UniGameModule
+    [UniModule(typeof(IScheduleModule))]
+    public class ScheduleModule : UniGameModule, IScheduleModule
     {
         // how to instantiate module ?
 
@@ -15,21 +17,23 @@ namespace ModuleBased
 
         protected override void OnStartingModule()
         {
-            foreach (var mod in Modules)
-            {
-                var methods = mod.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-                foreach (var method in methods)
-                {
-                    if (method.IsDefined(typeof(ObserverAttribute)))
-                    {
-                        var ps = method.GetParameters();
-                        if (ps.Length <= 0)
-                            continue;
-                        AddScheduleMethod(ps[0].ParameterType, method);
-                    }
-                }
+            Debug.Log("Start");
+            Test();
+            //foreach (var mod in Modules)
+            //{
+            //    var methods = mod.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+            //    foreach (var method in methods)
+            //    {
+            //        if (method.IsDefined(typeof(ObserverAttribute)))
+            //        {
+            //            var ps = method.GetParameters();
+            //            if (ps.Length <= 0)
+            //                continue;
+            //            AddScheduleMethod(ps[0].ParameterType, method);
+            //        }
+            //    }
 
-            }
+            //}
         }
 
         private void AddScheduleMethod(Type schType, MethodInfo method)
@@ -50,7 +54,7 @@ namespace ModuleBased
 
         public void Test()
         {
-            HttpTrigger.Get("http://google.com")
+            HttpTrigger.Get("https://www.google.com/")
                 .Subscribe(
                     c => Debug.Log(c),
                     e => Debug.LogError(e)

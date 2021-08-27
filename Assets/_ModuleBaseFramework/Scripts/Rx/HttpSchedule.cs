@@ -1,18 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace ModuleBased
+namespace ModuleBased.Rx
 {
     public class HttpTrigger 
     {
         #region -- Static methods --
         public static IObservable<string> Get(string url)
         {
-            var req = new UnityWebRequest(url);
+            var req = UnityWebRequest.Get(url);
             var asyncOp = req.SendWebRequest();
             CancellationTokenSource cancel = new CancellationTokenSource();
             return new FromCoroutineObservable<string>((source, token) => FetchResult(asyncOp, source, null, cancel.Token));
@@ -23,8 +24,8 @@ namespace ModuleBased
             while (!asyncOp.isDone && !cancel.IsCancellationRequested)
             {
                 try
-                {
-                    progress.Report(asyncOp.progress);
+                {   
+                    progress?.Report(asyncOp.progress);
                 }
                 catch(Exception e)
                 {
@@ -39,8 +40,8 @@ namespace ModuleBased
                 observer.OnError(new Exception(webAsyncOp.webRequest.error));
             }
             if (webAsyncOp.isDone)
-            {   
-                string result = webAsyncOp.webRequest.result.ToString();
+            {
+                string result = Encoding.UTF8.GetString(webAsyncOp.webRequest.downloadHandler.data);
                 observer.OnComplete(result);
             }
             
@@ -58,21 +59,79 @@ namespace ModuleBased
             _coroutine = coroutine;
         }
 
-        // public Subscribe(
-        public override IDisposable Subscribe(IObserver<T> obserable)
+        public override IDisposable Subscribe(IObserver<T> observer)
         {
-            // cancellation disposable
-            var cancel = new CancellationTokenSource();
+            var cancel = new DisposableCancellation();
             var token = cancel.Token;
-            StartCoroutine(_coroutine);
-            return null;
+            var source = new FromCoroutine<T>(observer, cancel);
+
+            Debug.Log("Subscribe");
+            MainThreadDispatcher.SendStartCoroutine(_coroutine(source, token));
+            return cancel;
+        }
+    }
+
+    public class FromCoroutine<T> : IObserver<T>
+    {
+        IObserver<T> _observer;
+        IDisposable _disposable;
+
+        public FromCoroutine(IObserver<T> observer, IDisposable disposable)
+        {
+            _observer = observer;
+            _disposable = disposable;
         }
 
-        private void StartCoroutine(Func<IObserver<T>, CancellationToken, IEnumerator> coroutine)
+        public void OnComplete(T result)
         {
-            
-            // StartCoroutine(coroutine(cancel, token));
+            try
+            {
+                _observer.OnComplete(result);
+            }
+            finally
+            {
+                _disposable.Dispose();
+            }
         }
+
+        public void OnError(Exception error)
+        {
+            try
+            {
+                _observer.OnError(error);
+            }
+            finally
+            {
+                _disposable.Dispose();
+            }
+        }
+    }
+
+    public class DisposableCancellation : IDisposable
+    {
+        private CancellationTokenSource _cts;
+
+        public DisposableCancellation()
+        {
+            _cts = new CancellationTokenSource();
+        }
+
+        public DisposableCancellation(CancellationTokenSource source)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException("Source is null.");
+            }
+            _cts = source;
+        }
+
+        public void Dispose()
+        {
+            _cts.Cancel();
+        }
+
+        public CancellationToken Token => _cts.Token;
+        public bool IsDisposed => _cts.IsCancellationRequested;
     }
 
 
