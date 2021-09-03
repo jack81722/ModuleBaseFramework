@@ -10,7 +10,7 @@ namespace ModuleBased.Rx
         Action<Exception> _errorHandler;
         Action _completeHandler;
 
-        public DoObservable(IObservable<T> source, Action<T> onNext, Action<Exception> onError = null, Action onComplete = null) : base(source)
+        public DoObservable(IObservable<T> source, Action<T> onNext, Action<Exception> onError = null, Action onComplete = null)
         {
             _nextHandler = onNext;
             _errorHandler = onError;

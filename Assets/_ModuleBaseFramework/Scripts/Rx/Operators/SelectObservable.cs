@@ -8,7 +8,7 @@ namespace ModuleBased.Rx
     {
         Func<TSource, TResult> selector;
 
-        public SelectObservable(IObservable<TSource> source, Func<TSource, TResult> selector): base(source)
+        public SelectObservable(IObservable<TSource> source, Func<TSource, TResult> selector)
         {
             this.selector = selector;
         }

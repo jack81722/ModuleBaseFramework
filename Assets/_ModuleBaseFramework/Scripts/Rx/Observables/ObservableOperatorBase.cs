@@ -8,11 +8,6 @@ namespace ModuleBased.Rx
         protected IDisposable disposable;
         protected IObserver<T> observer;
 
-        public ObservableOperatorBase(IObservable<T> source)
-        {
-            this.source = source;
-        }
-
         public abstract void OnCompleted();
 
         public virtual void OnError(Exception error)
@@ -45,11 +40,6 @@ namespace ModuleBased.Rx
         protected IObservable<TSource> source;
         protected IDisposable disposable;
         protected IObserver<TResult> observer;
-
-        public ObservableOperatorBase(IObservable<TSource> source)
-        {
-            this.source = source;
-        }
 
         public abstract void OnCompleted();
 

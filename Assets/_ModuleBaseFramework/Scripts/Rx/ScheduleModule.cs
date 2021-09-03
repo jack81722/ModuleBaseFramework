@@ -17,10 +17,18 @@ namespace ModuleBased
 
         Dictionary<Type, List<MethodInfo>> _scheduleMethods;
 
+        bool isInit;
+        bool isEnd;
+
+
+        [RequireModule]
+        IGameModule _other;
+
         protected override void OnStartingModule()
         {
-            TestTask();
-            TestTaskWithCancel();
+            Test();
+            //TestTask();
+            //TestTaskWithCancel();
             
             //foreach (var mod in Modules)
             //{
@@ -39,6 +47,7 @@ namespace ModuleBased
             //}
         }
 
+
         private void AddScheduleMethod(Type schType, MethodInfo method)
         {
             if (!_scheduleMethods.TryGetValue(schType, out List<MethodInfo> methods))
@@ -53,6 +62,11 @@ namespace ModuleBased
         {
 
 
+        }
+
+        public void ListenTrigger()
+        {
+            
         }
 
         public void Test()
@@ -82,9 +96,9 @@ namespace ModuleBased
                     x => Debug.Log($"Next:{x}"),
                     e => Debug.LogError(e),
                     () => Debug.Log("Finished!")
-                );
-            disposable.Dispose();
+                );disposable.Dispose();
         }
+            
 
         public async Task<int> RunTask()
         {

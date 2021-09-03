@@ -18,5 +18,14 @@ namespace ModuleBased.Rx
             return new TaskObservable<T>(task);
         }
 
+        public static IObservable<T> FromCoroutine<T>(Func<IObserver<T>, IEnumerator> coroutine)
+        {
+            return new FromCoroutineObservable<T>((observer, token) => coroutine(observer));
+        }
+
+        public static IObservable<T> FromCoroutine<T>(Func<IObserver<T>, CancellationToken, IEnumerator> coroutine)
+        {
+            return new FromCoroutineObservable<T>(coroutine);
+        }
     }
 }

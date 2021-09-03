@@ -13,7 +13,7 @@ namespace ModuleBased.Rx
         bool _isValid;
         TSource _value;
 
-        public ContinueObservable(IObservable<TSource> source, Func<TSource, IObservable<TResult>> next) : base(source)
+        public ContinueObservable(IObservable<TSource> source, Func<TSource, IObservable<TResult>> next) 
         {
             _next = next;
         }

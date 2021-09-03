@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ModuleBased.Rx
 {
@@ -27,6 +28,11 @@ namespace ModuleBased.Rx
         public static IObservable<T> Do<T>(this IObservable<T> source, Action<T> onNext, Action<Exception> onError = null, Action onComplete = null)
         {
             return new DoObservable<T>(source, onNext, onError, onComplete);
+        }
+
+        public static IObservable<T[]> WhenAll<T>(this IEnumerable<IObservable<T>> sources)
+        {
+            return new WhenAllObservable<T>(sources.ToArray());
         }
     }
 }
