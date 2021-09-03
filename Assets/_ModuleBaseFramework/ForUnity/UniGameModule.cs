@@ -10,6 +10,7 @@ namespace ModuleBased.ForUnity
         public ILogger Logger { get; set; }
         public IGameModuleCollection Modules { get; set; }
 
+
         public void InitializeModule()
         {   
             OnInitializingModule();
@@ -19,9 +20,6 @@ namespace ModuleBased.ForUnity
         {
             OnStartingModule();
         }
-
-        public virtual void OnRemoved() { }
-
         #endregion
 
         #region -- Protected virtual methods --
@@ -29,5 +27,7 @@ namespace ModuleBased.ForUnity
 
         protected virtual void OnStartingModule() { }
         #endregion
+
+
     }
 }

@@ -17,6 +17,5 @@ namespace ModuleBased {
         /// </remarks>
         void StartModule();
 
-        void OnRemoved();
     }
 }
