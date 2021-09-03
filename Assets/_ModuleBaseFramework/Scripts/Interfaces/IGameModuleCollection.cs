@@ -6,6 +6,8 @@ namespace ModuleBased {
     public delegate void ModuleHandler(Type itfType, IGameModule mod);
 
     public interface IGameModuleCollection : IEnumerable, IEnumerable<IGameModule> {
+        int Count { get; }
+
         /// <summary>
         /// Added module by interface key
         /// </summary>

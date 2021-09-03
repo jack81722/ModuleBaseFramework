@@ -2,6 +2,8 @@
 using ModuleBased.AOP.Collections;
 using ModuleBased.AOP.Factories;
 using ModuleBased.DAO;
+using ModuleBased.Models;
+using ModuleBased.Rx;
 using System;
 using System.Reflection;
 
@@ -63,31 +65,30 @@ namespace ModuleBased
         #endregion
 
         #region -- Initialize methods --
-        public void InstatiateCore()
+        public void InstantiateCore()
         {
             if (_isInit)
                 return;
+            IObservable<ProgressInfo>[] initProgs = new IObservable<ProgressInfo>[Modules.Count];
+            int i = 0;
             foreach (var mod in Modules)
             {
                 AssignLogger(mod);
-                InitializeModule(mod);
+                initProgs[i++] = new ProgressObservable<ProgressInfo>(mod.InitializeModule);
             }
-            AssignRequiredModules();
-            AssigneRequiredDaos();
-            _isInit = true;
+            initProgs.WhenAll()
+                .Subscribe(
+                    (infos) => { },
+                    (error) => _logger.LogError(error),
+                    () =>
+                    {
+                        AssignRequiredModules();
+                        AssigneRequiredDaos();
+                        _isInit = true;
+                    }
+                );
         }
 
-        private void InitializeModule(IGameModule module)
-        {
-            try
-            {
-                module.InitializeModule();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e);
-            }
-        }
         #endregion
 
         #region -- Start methods --
@@ -220,9 +221,18 @@ namespace ModuleBased
             if (_isInit)
             {
                 AssignLogger(mod);
-                InitializeModule(mod);
-                AssignRequiredModule(mod.GetType(), mod);
-                AssignRequiredDao(mod.GetType(), mod);
+                IObservable<ProgressInfo> observable = new ProgressObservable<ProgressInfo>(mod.InitializeModule);
+                observable.Subscribe(
+                    (p) => { },
+                    (e) => { },
+                    () =>
+                    {
+
+                        AssignRequiredModule(mod.GetType(), mod);
+                        AssignRequiredDao(mod.GetType(), mod);
+                    });
+
+
             }
             if (_isStart)
             {

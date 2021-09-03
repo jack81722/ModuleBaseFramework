@@ -63,7 +63,7 @@ namespace ModuleBased.ForUnity
             if (InitializeSingleton())
             {
                 HandoverModules();
-                InstatiateCore();
+                InstantiateCore();
                 /*
                  * In online game, dao layer must be waiting connection.
                  * Module and views should wait dao initialization.
@@ -117,7 +117,7 @@ namespace ModuleBased.ForUnity
             //}
         }
 
-        public void InstatiateCore()
+        public void InstantiateCore()
         {
             if (_logger == null)
                 _logger = new UniLogger();
@@ -161,7 +161,7 @@ namespace ModuleBased.ForUnity
 
         public void InitializeAll()
         {
-            _core.InstatiateCore();
+            _core.InstantiateCore();
             Views.InitializeViews();
         }
         #endregion

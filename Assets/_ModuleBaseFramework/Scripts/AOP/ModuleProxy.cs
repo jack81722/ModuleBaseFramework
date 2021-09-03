@@ -1,5 +1,7 @@
 ﻿using ModuleBased.AOP.Attributes;
+using ModuleBased.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -197,11 +199,12 @@ namespace ModuleBased.AOP
             }
         }
 
-        public void InitializeModule()
+        public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
         {
             var mod = _wrappedObj as IGameModule;
             if (mod != null)
-                mod.InitializeModule();
+                throw new InvalidCastException("The wrapped object must be IGameModule");
+            yield return mod.InitializeModule(progress);
         }
 
         public void StartModule()

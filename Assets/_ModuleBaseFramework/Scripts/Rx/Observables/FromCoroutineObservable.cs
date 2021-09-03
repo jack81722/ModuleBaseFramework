@@ -10,7 +10,7 @@ namespace ModuleBased.Rx
         readonly Func<IObserver<T>, CancellationToken, IEnumerator> _coroutine;
 
         public FromCoroutineObservable(Func<IObserver<T>, CancellationToken, IEnumerator> coroutine)
-        {
+        {   
             _coroutine = coroutine;
         }
 

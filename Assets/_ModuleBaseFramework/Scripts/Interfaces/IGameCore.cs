@@ -27,7 +27,7 @@ namespace ModuleBased
         /// </summary>
         IGameDaoCollection Daos { get; }
 
-        void InstatiateCore();
+        void InstantiateCore();
 
         void StartCore();
 

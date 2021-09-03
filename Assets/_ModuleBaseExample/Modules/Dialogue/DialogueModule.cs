@@ -1,5 +1,6 @@
 ﻿using ModuleBased.Dialogue;
 using ModuleBased.ForUnity;
+using ModuleBased.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,8 +24,11 @@ namespace ModuleBased.Example.Dialogue {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void InitializeModule() {
+
+        public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
+        {
             _blockCache = new Dictionary<string, IDialogueBlock>();
+            yield break;
         }
 
         public void StartModule() {
@@ -118,6 +122,7 @@ namespace ModuleBased.Example.Dialogue {
         {
             throw new NotImplementedException();
         }
+
         #endregion
     }
 

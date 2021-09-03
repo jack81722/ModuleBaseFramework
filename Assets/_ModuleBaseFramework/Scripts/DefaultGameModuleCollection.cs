@@ -12,6 +12,8 @@ namespace ModuleBased
         private Dictionary<Type, IGameModule> _modules;
         private ILogger _logger;
 
+        public int Count => _modules.Count;
+
         public DefaultGameModuleCollection(ILogger logger)
         {
             _logger = logger;

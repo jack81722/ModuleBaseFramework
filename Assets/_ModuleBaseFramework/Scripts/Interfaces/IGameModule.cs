@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using ModuleBased.Models;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ModuleBased {
@@ -7,7 +9,7 @@ namespace ModuleBased {
 
         IGameModuleCollection Modules { get; set; }
 
-        void InitializeModule();
+        IEnumerator InitializeModule(IProgress<ProgressInfo> progress);
 
         /// <summary>
         /// Start module after all module initialized

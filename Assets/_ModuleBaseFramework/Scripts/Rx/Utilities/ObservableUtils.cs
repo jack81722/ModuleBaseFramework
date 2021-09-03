@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ModuleBased.Rx
 {
-    public static partial class ObservableUtils 
+    public static partial class ObservableUtils
     {
         public static IDisposable Subscribe<T>(this IObservable<T> source, Action<T> onNext, Action<Exception> onError)
         {

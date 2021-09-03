@@ -12,6 +12,7 @@ namespace ModuleBased.Rx
 
         public DoObservable(IObservable<T> source, Action<T> onNext, Action<Exception> onError = null, Action onComplete = null)
         {
+            this.source = source;
             _nextHandler = onNext;
             _errorHandler = onError;
             _completeHandler = onComplete;

@@ -47,7 +47,11 @@ namespace ModuleBased
 
         public void OnError(Exception error)
         {
-            _errorHandler(error);
+            try
+            {
+                _errorHandler(error);
+            }
+            catch { }
         }
     }
 }

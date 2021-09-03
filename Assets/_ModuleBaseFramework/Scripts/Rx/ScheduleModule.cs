@@ -1,4 +1,5 @@
 using ModuleBased.ForUnity;
+using ModuleBased.Models;
 using ModuleBased.Rx;
 using System;
 using System.Collections;
@@ -24,12 +25,23 @@ namespace ModuleBased
         [RequireModule]
         IGameModule _other;
 
+        protected override IEnumerator OnInitializingModule(IProgress<ProgressInfo> progress)
+        {
+            float step = 0.1f;
+            for (float i = 0f; i < 1f; i += step)
+            {
+                yield return null;
+                Debug.Log(i);
+                progress.Report(i);
+            }
+        }
+
         protected override void OnStartingModule()
         {
-            Test();
+            //Test();
             //TestTask();
             //TestTaskWithCancel();
-            
+
             //foreach (var mod in Modules)
             //{
             //    var methods = mod.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
@@ -66,7 +78,7 @@ namespace ModuleBased
 
         public void ListenTrigger()
         {
-            
+
         }
 
         public void Test()
@@ -75,7 +87,15 @@ namespace ModuleBased
                 .Do(c => Debug.Log($"Do:{c}"))
                 .Subscribe(
                     c => Debug.Log(c),
-                    e => Debug.LogError(e)
+                    e => {
+                        if (e != null)
+                        {
+                            Debug.LogError(e);
+                            return;
+                        }
+                        Debug.LogError("Exception is null");
+                    }
+
                 );
         }
 
@@ -96,9 +116,10 @@ namespace ModuleBased
                     x => Debug.Log($"Next:{x}"),
                     e => Debug.LogError(e),
                     () => Debug.Log("Finished!")
-                );disposable.Dispose();
+                );
+            disposable.Dispose();
         }
-            
+
 
         public async Task<int> RunTask()
         {

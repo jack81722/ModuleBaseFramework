@@ -3,6 +3,8 @@ using ModuleBased.Dialogue;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using ModuleBased.Models;
 
 namespace ModuleBased.Example {
     [UniModule(typeof(ICharacterModule))]
@@ -16,8 +18,11 @@ namespace ModuleBased.Example {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void InitializeModule() {
 
+        public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
+        {   
+            progress.Report(1, "Character");
+            yield break;
         }
 
         public void StartModule() {
@@ -53,6 +58,7 @@ namespace ModuleBased.Example {
         {
             throw new System.NotImplementedException();
         }
+
         #endregion
     }
 

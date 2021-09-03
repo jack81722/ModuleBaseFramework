@@ -49,12 +49,15 @@ namespace ModuleBased.Rx
 
         public override IDisposable Subscribe(IObserver<T[]> observer)
         {
+            CompositeDisposable composite = new CompositeDisposable();
             this.observer = observer;
             foreach(var source in _sources)
             {
-                source.Subscribe(this);
+                composite.Add(source.Subscribe(this));
             }
-            return new SingleAssignmentDisposable();
+            disposable = composite;
+            return composite;
         }
+
     }
 }

@@ -24,6 +24,7 @@ namespace ModuleBased.Rx
         public override IDisposable Subscribe(IObserver<T> observer)
         {
             this.observer = observer;
+            UnityEngine.Debug.Log($"source ? {source == null}");
             disposable = source.Subscribe(this);
             return disposable;
         }
@@ -64,7 +65,7 @@ namespace ModuleBased.Rx
             return disposable;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             disposable.Dispose();
         }

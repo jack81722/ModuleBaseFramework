@@ -2,10 +2,15 @@
 using ModuleBased.ForUnity;
 using ModuleBased.Dialogue;
 using UnityEngine;
+using System.Collections;
+using ModuleBased.Models;
+using System;
 
-namespace ModuleBased.Example {
+namespace ModuleBased.Example
+{
     [UniModule(typeof(IWeatherModule))]
-    public class WeatherModule : MonoBehaviour, IGameModule, IWeatherModule {
+    public class WeatherModule : MonoBehaviour, IGameModule, IWeatherModule
+    {
         public EWeatherState WeatherState;
 
         public ParticleSystem RainEffect;
@@ -19,24 +24,30 @@ namespace ModuleBased.Example {
         public IGameModuleCollection Modules { get; set; }
         public ILogger Logger { get; set; }
 
-        public void InitializeModule() {
+        public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
+        {
             WeatherState = EWeatherState.Sunny;
+            yield return null;
         }
 
-        public void StartModule() {
+        public void StartModule()
+        {
 
         }
         #endregion
 
         #region -- Unity APIs --
-        private void Update() {
-            if (Input.GetKeyDown(KeyCode.KeypadPlus)) {
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.KeypadPlus))
+            {
                 int current = (int)WeatherState;
                 current = (current + 1) % 4;
                 SetWeather((EWeatherState)current);
                 OnSetWeather?.Invoke();
             }
-            if (Input.GetKeyDown(KeyCode.KeypadMinus)) {
+            if (Input.GetKeyDown(KeyCode.KeypadMinus))
+            {
                 int current = (int)WeatherState;
                 current = (current + 3) % 4;
                 SetWeather((EWeatherState)current);
@@ -47,7 +58,8 @@ namespace ModuleBased.Example {
 
         #region -- Cmds --
         [ModuleCmd]
-        public void SetWeather(EWeatherState state) {
+        public void SetWeather(EWeatherState state)
+        {
             WeatherState = state;
             Debug.Log($"Set weather : {state}");
             if (state == EWeatherState.Rain)
@@ -55,24 +67,28 @@ namespace ModuleBased.Example {
         }
 
         [ModuleCmd]
-        public void SetSunny() {
+        public void SetSunny()
+        {
             SetWeather(EWeatherState.Sunny);
         }
 
 
         [ModuleCmd]
-        public void SetRain() {
+        public void SetRain()
+        {
             SetWeather(EWeatherState.Rain);
             //RainEffect.Play();
         }
 
         [ModuleCmd]
-        public void SetCloudy() {
+        public void SetCloudy()
+        {
             SetWeather(EWeatherState.Cloudy);
         }
 
         [ModuleCmd]
-        public void SetWindy() {
+        public void SetWindy()
+        {
             SetWeather(EWeatherState.Windy);
         }
 
@@ -84,14 +100,16 @@ namespace ModuleBased.Example {
     }
 
     [SerializeField]
-    public enum EWeatherState : int{
+    public enum EWeatherState : int
+    {
         Sunny = 0,
         Rain = 1,
         Cloudy = 2,
         Windy = 3
     }
 
-    public interface IWeatherModule {
+    public interface IWeatherModule
+    {
         [SimpleLog]
         [ModuleCmd]
         void SetWeather(EWeatherState state);

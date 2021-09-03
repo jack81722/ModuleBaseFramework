@@ -19,6 +19,8 @@ namespace ModuleBased.AOP.Collections
 
         private IModuleProxyFactory _proxyFactory;
 
+        public int Count => _modules.Count;
+
         public GameModuleProxyCollection(ILogger logger, IModuleProxyFactory proxyFactory)
         {
             _logger = logger;
