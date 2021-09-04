@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ModuleBased
+namespace ModuleBased.Rx
 {
     public class MainThreadDispatcher : MonoBehaviour
     {
@@ -24,9 +24,14 @@ namespace ModuleBased
             }
         }
 
-        public static Coroutine SendStartCoroutine(IEnumerator coroutine)
+        public static void SendStartCoroutine(IEnumerator coroutine)
         {
-            return singleton.StartCoroutine(coroutine);
+            singleton.StartCoroutine(coroutine);
+        }
+
+        private void Update()
+        {
+            Debug.Log("update");
         }
     }
 }

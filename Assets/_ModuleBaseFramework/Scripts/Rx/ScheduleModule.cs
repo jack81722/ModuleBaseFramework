@@ -31,7 +31,7 @@ namespace ModuleBased
             for (float i = 0f; i < 1f; i += step)
             {
                 yield return null;
-                Debug.Log(i);
+                //Debug.Log(i);
                 progress.Report(i);
             }
         }
@@ -39,7 +39,7 @@ namespace ModuleBased
         protected override void OnStartingModule()
         {
             //Test();
-            //TestTask();
+            TestTask();
             //TestTaskWithCancel();
 
             //foreach (var mod in Modules)
@@ -101,7 +101,7 @@ namespace ModuleBased
 
         public void TestTask()
         {
-            Observable.Task(RunTaskWithCancel)
+            Observable.Task((token) => RunTaskWithCancel(token))
                 .Subscribe(
                     x => Debug.Log($"Next:{x}"),
                     e => Debug.LogError(e),

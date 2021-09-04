@@ -21,19 +21,30 @@ namespace ModuleBased
         {
             get
             {
-                bool taskComplete = _task.IsCompleted && _task.Status == TaskStatus.RanToCompletion;
-                if (!taskComplete)
+                bool taskComplete = false;
+                try
                 {
+                    taskComplete = _task.IsCompleted && _task.Status == TaskStatus.RanToCompletion;
+                    //UnityEngine.Debug.Log($"IsCompleted? {_task.IsCompleted}, Status:{_task.Status}");
+                }
+                catch(Exception e)
+                {
+                    UnityEngine.Debug.Log($"{e}");
                     return true;
                 }
-                return false;
+                return !taskComplete;
             }
 
         }
 
         public IEnumerator ToEnumerator()
         {
-            yield return this;
+            while (keepWaiting)
+            {
+                yield return null;
+            }
+            Debug.Log("Complete task yield");
+            yield return null;
         }
     }
 }
