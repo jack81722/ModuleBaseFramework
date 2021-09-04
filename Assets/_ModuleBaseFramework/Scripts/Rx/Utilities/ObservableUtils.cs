@@ -34,5 +34,15 @@ namespace ModuleBased.Rx
         {
             return new WhenAllObservable<T>(sources.ToArray());
         }
+
+        public static IObservable<T[]> Batch<T>(this IEnumerable<IObservable<T>> sources, int batchSize)
+        {
+            return new BatchObservable<T>(sources, batchSize);
+        }
+
+        public static IObservable<TR> Select<T, TR>(this IObservable<T> source, Func<T, TR> selector)
+        {
+            return new SelectObservable<T, TR>(source, selector);
+        }
     }
 }

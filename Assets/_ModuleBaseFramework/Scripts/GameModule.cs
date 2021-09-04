@@ -1,12 +1,10 @@
 using ModuleBased.Models;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
-namespace ModuleBased.ForUnity
+namespace ModuleBased
 {
-    public class UniGameModule : MonoBehaviour, IGameModule
+    public class GameModule : IGameModule
     {
         #region -- IGameModule methods --
         public ILogger Logger { get; set; }
@@ -14,7 +12,7 @@ namespace ModuleBased.ForUnity
 
 
         public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
-        {   
+        {
             var e = OnInitializingModule(progress);
             while (e.MoveNext())
             {
@@ -36,14 +34,12 @@ namespace ModuleBased.ForUnity
         /// <remarks>
         /// This method will run in coroutine
         /// </remarks>
-        protected virtual IEnumerator OnInitializingModule(IProgress<ProgressInfo> progress) 
+        protected virtual IEnumerator OnInitializingModule(IProgress<ProgressInfo> progress)
         {
             yield return null;
         }
 
         protected virtual void OnStartingModule() { }
         #endregion
-
-
     }
 }
