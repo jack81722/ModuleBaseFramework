@@ -23,7 +23,7 @@ public class UniGameCore : MonoBehaviour, IGameCore {
 遊戲模組，將集中初始化於GameCore，所有遊戲邏輯都由Module處理和管理。
 ```csharp
 public class WeatherModule : MonoBehaviour, IGameModule {
-    public void OnModuleInitiailize() { 
+    public IEnumerable OnModuleInitiailize(IProgress<float> progress) { 
         // TODO: initiailize game module here
     }
     
