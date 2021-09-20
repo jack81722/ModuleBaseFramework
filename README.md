@@ -34,7 +34,11 @@ public class WeatherModule : MonoBehaviour, IGameModule {
 }
 ```
 
-**RequireModuleAttribute** <br/>
+
+
+# Features
+## Dependence injection
+### RequireModuleAttribute
 GameCore會主動注入指定有```[RequireModule]```標籤的Module(可Private或Public)，降低與其他模組的依賴性，
 注入行為會在Initialize後執行，如需使用其他模組功能，必須在Start的階段呼叫。
 ```csharp
@@ -47,9 +51,6 @@ public class WeatherModule : MonoBehaviour, IGameModule {
     }
 }
 ```
-
-# Features
-## Dependence injection
 ## Proxy & AOP
 ## Reactive extension
 ## Data access layer
