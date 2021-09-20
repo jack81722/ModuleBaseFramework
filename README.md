@@ -1,5 +1,6 @@
 # ModuleBaseFramework
-Module-based framework of Unity
+## Introduction
+This is a framework for Unity as C# MVC. With the framework, it would help you to focus how to maintain your game logic without worrying about the initialization and dependence of other scripts.
 
 ## Quick Start
 Coming soon...
@@ -77,6 +78,8 @@ Proxy通常用來處理AOP架構，可在指定的方法上附加須執行的Att
 ### Reactive extension
 如一般Reactive的使用方式，可以像UniRx或其他任何Rx一樣使用本框架提供的方法。
 
-
+## Future
+- New proxy mechanism
+- 
 
 
