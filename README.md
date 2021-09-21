@@ -1,7 +1,12 @@
 # ModuleBaseFramework
-Module-based framework of Unity
+## Introduction
+This is a framework for Unity as C# MVC. With the framework, it would help you to focus how to maintain your game logic without worrying about the initialization and dependence of other scripts.
 
-**GameCore** <br/>
+## Quick Start
+Coming soon...
+
+## Architecture
+### GameCore
 集中管理所有Module的程序，並提供取得其他模組的API。
 ```csharp
 public class UniGameCore : MonoBehaviour, IGameCore {
@@ -19,7 +24,7 @@ public class UniGameCore : MonoBehaviour, IGameCore {
 }
 ```
 
-**GameModule** <br/>
+### GameModule
 遊戲模組，將集中初始化於GameCore，所有遊戲邏輯都由Module處理和管理。
 ```csharp
 public class WeatherModule : MonoBehaviour, IGameModule {
@@ -33,25 +38,48 @@ public class WeatherModule : MonoBehaviour, IGameModule {
     }
 }
 ```
+### Data access layer
+藉由實作IDao介面宣告類別為Data access object，並且自定義需要的邏輯介面，同GameModule的實作方式。
+但考慮到大量或長時間載入的情境，我們必須調整或設計一套能夠多線程或協程的方式進行載入機制。
+```csharp
+public class FileDao : IDao, IFileDao{
+    public string ReadJsonFile(string path){
+        // TODO: something ...
+    }
+}
 
-**RequireModuleAttribute** <br/>
-GameCore會主動注入指定有```[RequireModule]```標籤的Module(可Private或Public)，降低與其他模組的依賴性，
+public interface IFileDao{
+    string ReadJsonFile(string path);
+}
+```
+### View
+View如同GameModule有自己的初始化機制，並且與GameModule同樣能使用DI功能，在初始化階段註冊行為或取得Module參照
+## Features
+### Dependence injection
+- **RequireModuleAttribute**
+GameCore會主動注入指定有```[RequireModule]```標籤的Module(可Private或Public)，降低與其他模組的依賴性，注入的類別必須依賴介面而非類別。
 注入行為會在Initialize後執行，如需使用其他模組功能，必須在Start的階段呼叫。
 ```csharp
 public class WeatherModule : MonoBehaviour, IGameModule {
     [RequireModule]
-    private OtherModule _otherMod;
+    private IOtherModule _otherMod;
     
     public void OnModuleStart() {
         _otherMod.CallMethod();
     }
 }
 ```
+- **RequireDao**
+GameCore會主動注入指定有```[RequireDao]```標籤的Dao，用法同```[RequireModule]```。
 
-# Features
-## Dependence injection
-## Proxy & AOP
-## Reactive extension
-## Data access layer
+### Proxy & AOP
+Proxy通常用來處理AOP架構，可在指定的方法上附加須執行的Attribute，便可實作出自定義的Before, After呼叫；
+**Notice: Proxy機制在「IL2CPP」的建置環境中無法正常運作，將來會重新設計此功能。**
+### Reactive extension
+如一般Reactive的使用方式，可以像UniRx或其他任何Rx一樣使用本框架提供的方法。
+
+## Future
+- New proxy mechanism
+- 
 
 
