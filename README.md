@@ -53,7 +53,7 @@ public interface IFileDao{
 }
 ```
 ### View
-View如同GameModule有自己的初始化機制，並且與GameModule同樣能使用DI功能，在初始化階段註冊行為或取得Module參照
+View如同GameModule有自己的初始化機制，並且與GameModule同樣能使用DI功能，在初始化階段註冊行為或取得Module參照。
 ## Features
 ### Dependence injection
 - **RequireModuleAttribute**
@@ -73,7 +73,7 @@ public class WeatherModule : MonoBehaviour, IGameModule {
 GameCore會主動注入指定有```[RequireDao]```標籤的Dao，用法同```[RequireModule]```。
 
 ### Proxy & AOP
-Proxy通常用來處理AOP架構，可在指定的方法上附加須執行的Attribute，便可實作出自定義的Before, After呼叫；
+Proxy通常用來處理AOP架構，可在指定的方法上附加須執行的Attribute，便可實作出自定義的Before, After呼叫。
 **Notice: Proxy機制在「IL2CPP」的建置環境中無法正常運作，將來會重新設計此功能。**
 ### Reactive extension
 如一般Reactive的使用方式，可以像UniRx或其他任何Rx一樣使用本框架提供的方法。
