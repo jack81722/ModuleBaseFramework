@@ -80,6 +80,7 @@ Proxy通常用來處理AOP架構，可在指定的方法上附加須執行的Att
 
 ## Future
 - New proxy mechanism
-- 
+- Dao async and loading mechanism
+- Initialize mechanism
 
 
