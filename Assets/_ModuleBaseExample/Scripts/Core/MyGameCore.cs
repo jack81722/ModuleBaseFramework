@@ -27,7 +27,7 @@ namespace ModuleBased.Example
             InstantiateCore();
             var mod = GetComponent<MyModule>();
             var proxy = new MyModuleProxy(mod);
-            AddModule<IMyModule>(proxy);
+            _core.Modules.AddModule(typeof(IMyModule), proxy);
         }
 
         private void Start()
@@ -44,35 +44,14 @@ namespace ModuleBased.Example
         public IGameViewCollection Views => _core.Views;
 
         public IGameDaoCollection Daos => _core.Daos;
-
-        public void AddModule(Type itfType, Type modType)
-        {
-            _core.AddModule(itfType, modType);
-        }
-
-        public void AddModule(Type itfType, IGameModule mod)
-        {
-            _core.AddModule(itfType, mod);
-        }
-
-        public void AddModule<TItf, TMod>()
-            where TItf : class
-            where TMod : IGameModule, TItf
-        {
-            _core.AddModule<TItf, TMod>();
-        }
-
-        public void AddModule<TItf>(IGameModule mod) where TItf : class
-        {
-            _core.AddModule<TItf>(mod);
-        }
+        
 
         public void InstantiateCore()
         {
             if (_logger == null)
                 _logger = new UniLogger();
             if (_core == null)
-                _core = new GameCore(_logger, false);
+                _core = new GameCore(_logger);
 
         }
 

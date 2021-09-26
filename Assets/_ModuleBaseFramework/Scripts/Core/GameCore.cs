@@ -1,7 +1,4 @@
-﻿using ModuleBased.AOP;
-using ModuleBased.AOP.Collections;
-using ModuleBased.AOP.Factories;
-using ModuleBased.DAO;
+﻿using ModuleBased.DAO;
 using ModuleBased.Models;
 using ModuleBased.Rx;
 using System;
@@ -35,31 +32,13 @@ namespace ModuleBased
         private ILogger _logger;
 
         #region -- Constructors --
-        public GameCore(ILogger logger, bool enableProxy = false)
+
+
+        public GameCore(ILogger logger)
         {
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
-
-            if (enableProxy)
-            {
-                var proxyFactory = new DefaultModuleProxyFactory();
-                Modules = new GameModuleProxyCollection(logger, proxyFactory);
-            }
-            else
-                Modules = new DefaultGameModuleCollection(logger);
-            Views = new DefaultGameViewCollection(logger, Modules);
-        }
-
-        public GameCore(ILogger logger, IModuleProxyFactory proxyFactory)
-        {
-            _logger = logger;
-            Daos = new DefaultGameDaoCollection();
-            if (proxyFactory != null)
-            {
-                Modules = new GameModuleProxyCollection(logger, proxyFactory);
-            }
-            else
-                Modules = new DefaultGameModuleCollection(logger);
+            Modules = new DefaultGameModuleCollection(logger);
             Views = new DefaultGameViewCollection(logger, Modules);
         }
         #endregion

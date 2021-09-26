@@ -1,6 +1,4 @@
-﻿using ModuleBased.AOP;
-using ModuleBased.AOP.Factories;
-using ModuleBased.DAO;
+﻿using ModuleBased.DAO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,7 +120,7 @@ namespace ModuleBased.ForUnity
             if (_logger == null)
                 _logger = new UniLogger();
             if (_core == null)
-                _core = new GameCore(_logger, UseProxy);
+                _core = new GameCore(_logger);
         }
 
         private void InstallDaos()
@@ -170,31 +168,7 @@ namespace ModuleBased.ForUnity
         {
             _core.StartCore();
         }
-
-        #region -- Add module methods --
-        /// <summary>
-        /// Added module by interface key
-        /// </summary>
-        public void AddModule(Type itfType, Type modType)
-        {
-            _core.AddModule(itfType, modType);
-        }
-
-        public void AddModule(Type itfType, IGameModule mod)
-        {
-            _core.AddModule(itfType, mod);
-        }
-
-        public void AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf
-        {
-            _core.AddModule<TItf, TMod>();
-        }
-
-        public void AddModule<TItf>(IGameModule mod) where TItf : class
-        {
-            _core.AddModule<TItf>(mod);
-        }
-        #endregion
+        
 
         #region -- UniModule methods --
         /// <summary>

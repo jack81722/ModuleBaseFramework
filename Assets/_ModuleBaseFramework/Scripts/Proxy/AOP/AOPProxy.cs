@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -7,13 +6,8 @@ namespace ModuleBased.Proxy.AOP
 {
     public class AOPProxy<T> : ProxyBase<T> where T : class
     {
-        private Dictionary<EAOPUsage, List<IAOPHandler>> _handlers = new Dictionary<EAOPUsage, List<IAOPHandler>>
-        {
-            { EAOPUsage.After, new List<IAOPHandler>() },
-            { EAOPUsage.Before, new List<IAOPHandler>() },
-            { EAOPUsage.Around, new List<IAOPHandler>() },
-            { EAOPUsage.Error, new List<IAOPHandler>() }
-        };
+        private static readonly EAOPUsage[] _flags = new EAOPUsage[] { EAOPUsage.After, EAOPUsage.Around, EAOPUsage.Before, EAOPUsage.Error };
+        private Dictionary<MemberInfo, Dictionary<EAOPUsage, List<IAOPHandler>>> _handlers = new Dictionary<MemberInfo, Dictionary<EAOPUsage, List<IAOPHandler>>>();
 
         public AOPProxy(T real) : base(real)
         {
@@ -23,21 +17,35 @@ namespace ModuleBased.Proxy.AOP
                 var attrs = member.GetCustomAttributes(typeof(AOPAttribute), true);
                 if (attrs.Length > 0)
                 {
-                    UnityEngine.Debug.Log(member.Name);
                     foreach (var attr in attrs)
                     {
                         var aopAttr = (AOPAttribute)attr;
-                        if (!typeof(IAOPHandler).IsAssignableFrom(aopAttr.HandlerType))
-                            continue;
-                        var handler = (IAOPHandler)Activator.CreateInstance(aopAttr.HandlerType);
-                        foreach(var flag in _handlers.Keys)
-                        {
-                            if ((aopAttr.Usage & flag) == flag)
-                            {
-                                _handlers[flag].Add(handler);
-                            }
-                        }
+                        addHandler(member, aopAttr);
                     }
+                }
+            }
+        }
+
+        private void addHandler(MemberInfo member, AOPAttribute attr)
+        {
+            if (!typeof(IAOPHandler).IsAssignableFrom(attr.HandlerType))
+                return;
+            var handler = (IAOPHandler)Activator.CreateInstance(attr.HandlerType);
+            if (!_handlers.TryGetValue(member, out Dictionary<EAOPUsage, List<IAOPHandler>> dict))
+            {
+                dict = new Dictionary<EAOPUsage, List<IAOPHandler>>();
+                _handlers.Add(member, dict);
+            }
+            foreach (var flag in _flags)
+            {
+                if ((attr.Usage & flag) == flag)
+                {
+                    if (!dict.TryGetValue(flag, out List<IAOPHandler> list))
+                    {
+                        list = new List<IAOPHandler>();
+                        dict.Add(flag, list);
+                    }
+                    list.Add(handler);
                 }
             }
         }
@@ -45,7 +53,6 @@ namespace ModuleBased.Proxy.AOP
         protected override object InvokeProxyMethod(params object[] args)
         {
             var method = GetMethod(2);
-            UnityEngine.Debug.Log(method == null);
             object result = null;
             try
             {
@@ -65,9 +72,21 @@ namespace ModuleBased.Proxy.AOP
             return result;
         }
 
+        private IEnumerable<IAOPHandler> GetHandlers(MemberInfo member, EAOPUsage usage)
+        {
+            if (!_handlers.TryGetValue(member, out Dictionary<EAOPUsage, List<IAOPHandler>> dict))
+                return null;
+            if (!dict.TryGetValue(usage, out List<IAOPHandler> handlers))
+                return null;
+            return handlers;
+        }
+
         protected void BeforeInvoke(MethodInfo method, object[] args)
-        {            
-            foreach(var handler in _handlers[EAOPUsage.Before])
+        {
+            var handlers = GetHandlers(method, EAOPUsage.Before);
+            if (handlers == null)
+                return;
+            foreach (var handler in handlers)
             {
                 var aea = new AOPEventArgs
                 {
@@ -82,7 +101,10 @@ namespace ModuleBased.Proxy.AOP
 
         protected void AfterInvoke(MethodInfo method, object[] args, object result)
         {
-            foreach (var handler in _handlers[EAOPUsage.After])
+            var handlers = GetHandlers(method, EAOPUsage.After);
+            if (handlers == null)
+                return;
+            foreach (var handler in handlers)
             {
                 var aea = new AOPEventArgs
                 {
@@ -95,8 +117,12 @@ namespace ModuleBased.Proxy.AOP
             }
         }
 
-        protected void AroundInvoke(MethodInfo method, object[] args, object result) {
-            foreach (var handler in _handlers[EAOPUsage.Around])
+        protected void AroundInvoke(MethodInfo method, object[] args, object result)
+        {
+            var handlers = GetHandlers(method, EAOPUsage.Around);
+            if (handlers == null)
+                return;
+            foreach (var handler in handlers)
             {
                 var aea = new AOPEventArgs
                 {
@@ -111,7 +137,10 @@ namespace ModuleBased.Proxy.AOP
 
         protected void OnError(MethodInfo method, object[] args, Exception e)
         {
-            foreach (var handler in _handlers[EAOPUsage.Error])
+            var handlers = GetHandlers(method, EAOPUsage.Error);
+            if (handlers == null)
+                return;
+            foreach (var handler in handlers)
             {
                 var aea = new AOPEventArgs
                 {
