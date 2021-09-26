@@ -9,9 +9,9 @@ namespace ModuleBased
     public partial class GameCore : IGameCore
     {
         #region -- IGameCore properties --
-        public IGameModuleCollection Modules { get; }
-        public IGameViewCollection Views { get; }
-        public IGameDaoCollection Daos { get; }
+        public IGameModuleCollection Modules { get; private set; }
+        public IGameViewCollection Views { get; private set; }
+        public IGameDaoCollection Daos { get; private set; }
         #endregion
 
         /// <summary>
@@ -41,6 +41,14 @@ namespace ModuleBased
             Modules = new DefaultGameModuleCollection(logger);
             Views = new DefaultGameViewCollection(logger, Modules);
         }
+        
+        public GameCore(ILogger logger, IGameModuleCollection modules)
+        {
+            _logger = logger;
+            Daos = new DefaultGameDaoCollection();
+            Modules = modules;
+            Views = new DefaultGameViewCollection(logger, Modules);
+        }
         #endregion
 
         #region -- Initialize methods --
@@ -54,8 +62,8 @@ namespace ModuleBased
             }
             Observable
                 .ForEach(Modules, (mod) => Observable.Progress<ProgressInfo>(mod.InitializeModule))
-                .Batch(5)
-                //.WhenAll()
+                //.Batch(5)
+                .WhenAll()
                 .Subscribe(
                     (infos) => { },
                     (error) => _logger.LogError(error),

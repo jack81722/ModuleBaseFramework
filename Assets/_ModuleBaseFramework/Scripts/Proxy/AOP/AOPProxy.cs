@@ -6,8 +6,8 @@ namespace ModuleBased.Proxy.AOP
 {
     public class AOPProxy<T> : ProxyBase<T> where T : class
     {
-        private static readonly EAOPUsage[] _flags = new EAOPUsage[] { EAOPUsage.After, EAOPUsage.Around, EAOPUsage.Before, EAOPUsage.Error };
-        private Dictionary<MemberInfo, Dictionary<EAOPUsage, List<IAOPHandler>>> _handlers = new Dictionary<MemberInfo, Dictionary<EAOPUsage, List<IAOPHandler>>>();
+        private static readonly EAOPStatus[] _flags = new EAOPStatus[] { EAOPStatus.After, EAOPStatus.Around, EAOPStatus.Before, EAOPStatus.Error };
+        private Dictionary<MemberInfo, Dictionary<EAOPStatus, List<IAOPHandler>>> _handlers = new Dictionary<MemberInfo, Dictionary<EAOPStatus, List<IAOPHandler>>>();
 
         public AOPProxy(T real) : base(real)
         {
@@ -31,9 +31,9 @@ namespace ModuleBased.Proxy.AOP
             if (!typeof(IAOPHandler).IsAssignableFrom(attr.HandlerType))
                 return;
             var handler = (IAOPHandler)Activator.CreateInstance(attr.HandlerType);
-            if (!_handlers.TryGetValue(member, out Dictionary<EAOPUsage, List<IAOPHandler>> dict))
+            if (!_handlers.TryGetValue(member, out Dictionary<EAOPStatus, List<IAOPHandler>> dict))
             {
-                dict = new Dictionary<EAOPUsage, List<IAOPHandler>>();
+                dict = new Dictionary<EAOPStatus, List<IAOPHandler>>();
                 _handlers.Add(member, dict);
             }
             foreach (var flag in _flags)
@@ -72,9 +72,9 @@ namespace ModuleBased.Proxy.AOP
             return result;
         }
 
-        private IEnumerable<IAOPHandler> GetHandlers(MemberInfo member, EAOPUsage usage)
+        private IEnumerable<IAOPHandler> GetHandlers(MemberInfo member, EAOPStatus usage)
         {
-            if (!_handlers.TryGetValue(member, out Dictionary<EAOPUsage, List<IAOPHandler>> dict))
+            if (!_handlers.TryGetValue(member, out Dictionary<EAOPStatus, List<IAOPHandler>> dict))
                 return null;
             if (!dict.TryGetValue(usage, out List<IAOPHandler> handlers))
                 return null;
@@ -83,7 +83,7 @@ namespace ModuleBased.Proxy.AOP
 
         protected void BeforeInvoke(MethodInfo method, object[] args)
         {
-            var handlers = GetHandlers(method, EAOPUsage.Before);
+            var handlers = GetHandlers(method, EAOPStatus.Before);
             if (handlers == null)
                 return;
             foreach (var handler in handlers)
@@ -91,6 +91,7 @@ namespace ModuleBased.Proxy.AOP
                 var aea = new AOPEventArgs
                 {
                     Method = method,
+                    Status = EAOPStatus.Before,
                     Args = args,
                     Result = null,
                     Error = null
@@ -101,7 +102,7 @@ namespace ModuleBased.Proxy.AOP
 
         protected void AfterInvoke(MethodInfo method, object[] args, object result)
         {
-            var handlers = GetHandlers(method, EAOPUsage.After);
+            var handlers = GetHandlers(method, EAOPStatus.After);
             if (handlers == null)
                 return;
             foreach (var handler in handlers)
@@ -109,8 +110,9 @@ namespace ModuleBased.Proxy.AOP
                 var aea = new AOPEventArgs
                 {
                     Method = method,
+                    Status = EAOPStatus.After,
                     Args = args,
-                    Result = null,
+                    Result = result,
                     Error = null
                 };
                 handler.OnInvoke(this, aea);
@@ -119,7 +121,7 @@ namespace ModuleBased.Proxy.AOP
 
         protected void AroundInvoke(MethodInfo method, object[] args, object result)
         {
-            var handlers = GetHandlers(method, EAOPUsage.Around);
+            var handlers = GetHandlers(method, EAOPStatus.Around);
             if (handlers == null)
                 return;
             foreach (var handler in handlers)
@@ -127,8 +129,9 @@ namespace ModuleBased.Proxy.AOP
                 var aea = new AOPEventArgs
                 {
                     Method = method,
+                    Status = EAOPStatus.Around,
                     Args = args,
-                    Result = null,
+                    Result = result,
                     Error = null
                 };
                 handler.OnInvoke(this, aea);
@@ -137,7 +140,7 @@ namespace ModuleBased.Proxy.AOP
 
         protected void OnError(MethodInfo method, object[] args, Exception e)
         {
-            var handlers = GetHandlers(method, EAOPUsage.Error);
+            var handlers = GetHandlers(method, EAOPStatus.Error);
             if (handlers == null)
                 return;
             foreach (var handler in handlers)
@@ -145,9 +148,10 @@ namespace ModuleBased.Proxy.AOP
                 var aea = new AOPEventArgs
                 {
                     Method = method,
+                    Status = EAOPStatus.Error,
                     Args = args,
                     Result = null,
-                    Error = null
+                    Error = e
                 };
                 handler.OnInvoke(this, aea);
             }

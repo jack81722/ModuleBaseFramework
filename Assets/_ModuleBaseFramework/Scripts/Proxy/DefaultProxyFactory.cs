@@ -15,10 +15,6 @@ namespace ModuleBased.Proxy
             }
             return realObj;
         }
-
-        public T CreateProxy<T>(T realObj) where T : class
-        {
-            return CreateProxy(realObj) as T;
-        }
+        
     }
 }

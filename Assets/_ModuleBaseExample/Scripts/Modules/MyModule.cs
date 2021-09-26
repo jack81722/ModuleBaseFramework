@@ -8,18 +8,17 @@ using UnityEngine;
 
 namespace ModuleBased.Example
 {
-    //[Proxy(typeof(MyModuleProxy))]
+    [UniModule(typeof(IMyModule))]
+    [Proxy(typeof(MyModuleProxy))]
     public class MyModule : UniGameModule, IMyModule
     {
-
-        //[MyLog(EAOPUsage.Before)]
-        //[MyLog(EAOPUsage.After)]
+        [MyLog(EAOPStatus.Around)]
         public string GetHelloStr(int offset, int count)
         {
             return "Hello".Substring(offset, count);
         }
 
-        [MyLog(EAOPUsage.Before)]
+        [MyLog(EAOPStatus.Before)]
         public void SayHello()
         {
             print("Hello");
@@ -52,7 +51,7 @@ namespace ModuleBased.Example
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
     public class MyLogAttribute : AOPAttribute
     {
-        public MyLogAttribute(EAOPUsage usage) : base(usage, typeof(MyLog))
+        public MyLogAttribute(EAOPStatus usage) : base(usage, typeof(MyLog))
         {
         }
     }
@@ -62,6 +61,10 @@ namespace ModuleBased.Example
         public void OnInvoke(object sender, AOPEventArgs args)
         {
             Debug.Log(args.Method.Name);
+            if(args.Result != null)
+            {
+                Debug.Log($"Result: {args.Result}");
+            }
         }
     }
 

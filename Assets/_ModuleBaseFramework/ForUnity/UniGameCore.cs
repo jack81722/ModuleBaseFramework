@@ -15,8 +15,7 @@ namespace ModuleBased.ForUnity
         /// Singleton of game core
         /// </summary>
         private static UniGameCore _singleton;
-        public static UniGameCore Singleton
-        {
+        public static UniGameCore Singleton {
             get
             {
                 if (_singleton == null)
@@ -120,7 +119,15 @@ namespace ModuleBased.ForUnity
             if (_logger == null)
                 _logger = new UniLogger();
             if (_core == null)
-                _core = new GameCore(_logger);
+            {
+                IGameModuleCollection collection = new DefaultGameModuleCollection(_logger);
+                if (UseProxy)
+                {   
+                    var proxyFactory = new Proxy.DefaultProxyFactory();
+                    collection = new Proxy.ProxyModuleCollection(collection, proxyFactory);
+                }
+                _core = new GameCore(_logger, collection);
+            }
         }
 
         private void InstallDaos()
@@ -168,7 +175,7 @@ namespace ModuleBased.ForUnity
         {
             _core.StartCore();
         }
-        
+
 
         #region -- UniModule methods --
         /// <summary>

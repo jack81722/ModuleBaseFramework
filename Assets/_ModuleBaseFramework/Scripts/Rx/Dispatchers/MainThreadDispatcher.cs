@@ -28,10 +28,6 @@ namespace ModuleBased.Rx
         {
             singleton.StartCoroutine(coroutine);
         }
-
-        private void Update()
-        {
-            Debug.Log("update");
-        }
+        
     }
 }

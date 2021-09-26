@@ -7,10 +7,10 @@ namespace ModuleBased.Proxy.AOP
 {
     public abstract class AOPAttribute : Attribute
     {
-        public EAOPUsage Usage { get; }
+        public EAOPStatus Usage { get; }
         public Type HandlerType { get; }
 
-        public AOPAttribute(EAOPUsage usage, Type handlerType)
+        public AOPAttribute(EAOPStatus usage, Type handlerType)
         {
             Usage = usage;
             HandlerType = handlerType;
@@ -18,7 +18,7 @@ namespace ModuleBased.Proxy.AOP
     }
 
     [Flags]
-    public enum EAOPUsage : byte
+    public enum EAOPStatus : byte
     {
         Around = 1,
         Before = 2,
@@ -34,6 +34,7 @@ namespace ModuleBased.Proxy.AOP
     public struct AOPEventArgs
     {
         public MethodInfo Method;
+        public EAOPStatus Status;
         public object[] Args;
         public object Result;
         public Exception Error;
