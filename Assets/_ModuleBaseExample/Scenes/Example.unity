@@ -245,7 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43cb1285401aef64b94d40bec6758eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UseProxy: 0
+  UseProxy: 1
   CustomDaos: []
 --- !u!4 &252331349
 Transform:
