@@ -1,5 +1,6 @@
 using ModuleBased.ForUnity;
 using ModuleBased.Proxy;
+using ModuleBased.Proxy.AOP;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using UnityEngine;
 
 namespace ModuleBased.Example
 {
+    [Proxy(typeof(MyModuleProxy))]
     public class MyModule : UniGameModule, IMyModule
     {
 
@@ -30,38 +32,37 @@ namespace ModuleBased.Example
         string GetHelloStr(int offset, int count);
     }
 
-    public class MyModuleProxy : ModuleProxyBase<MyModule>, IMyModule
+    public class MyModuleProxy : ModuleAOP<MyModule>, IMyModule
     {
-        public MyModuleProxy(MyModule target) : base(target)
+        public MyModuleProxy(MyModule real) : base(real)
         {
         }
 
         public string GetHelloStr(int offset, int count)
         {
-            if (realObj.GetType().IsDefined(typeof(MyLogAttribute), true))
-            {
-                Debug.Log("Before GetHelloStr");
-            }
-            string result = (string)InvokeProxyMethod(offset, count);
-            Debug.Log("After GetHelloStr");
-            return result;
+            return (string)InvokeProxyMethod(offset, count);
         }
 
         public void SayHello()
         {
-            if (realObj.GetType().GetMethod("SayHello").IsDefined(typeof(MyLogAttribute), true))
-            {
-                Debug.Log("Before SayHello");
-            }
-            
             InvokeProxyMethod();
-            Debug.Log("After SayHello");
         }
     }
 
     [AttributeUsage(AttributeTargets.Method)]
-    public class MyLogAttribute : Attribute
+    public class MyLogAttribute : AOPAttribute
     {
+        public MyLogAttribute() : base(EAOPUsage.Before, typeof(MyLog))
+        {
+        }
+    }
+
+    public class MyLog : IAOPHandler
+    {
+        public void OnInvoke(object sender, AOPEventArgs args)
+        {
+            Debug.Log(args.Method.Name);
+        }
     }
 
 }
