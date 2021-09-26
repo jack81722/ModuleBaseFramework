@@ -30,16 +30,5 @@ namespace ModuleBased
         void InstantiateCore();
 
         void StartCore();
-
-        /// <summary>
-        /// Added module by interface key
-        /// </summary>
-        void AddModule(Type itfType, Type modType);
-
-        void AddModule(Type itfType, IGameModule mod);
-
-        void AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf;
-
-        void AddModule<TItf>(IGameModule mod) where TItf : class;
     }
 }

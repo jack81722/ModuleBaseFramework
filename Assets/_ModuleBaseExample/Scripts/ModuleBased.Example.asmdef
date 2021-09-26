@@ -1,0 +1,16 @@
+{
+    "name": "ModuleBased.Example",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4a7e3a746dd4c284bb26e935f071e962"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

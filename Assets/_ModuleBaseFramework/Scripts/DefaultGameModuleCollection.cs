@@ -1,5 +1,4 @@
-﻿using ModuleBased.AOP;
-using ModuleBased.DAO;
+﻿using ModuleBased.DAO;
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,7 +1,4 @@
-﻿using ModuleBased.AOP;
-using ModuleBased.AOP.Collections;
-using ModuleBased.AOP.Factories;
-using ModuleBased.DAO;
+﻿using ModuleBased.DAO;
 using ModuleBased.Models;
 using ModuleBased.Rx;
 using System;
@@ -12,9 +9,9 @@ namespace ModuleBased
     public partial class GameCore : IGameCore
     {
         #region -- IGameCore properties --
-        public IGameModuleCollection Modules { get; }
-        public IGameViewCollection Views { get; }
-        public IGameDaoCollection Daos { get; }
+        public IGameModuleCollection Modules { get; private set; }
+        public IGameViewCollection Views { get; private set; }
+        public IGameDaoCollection Daos { get; private set; }
         #endregion
 
         /// <summary>
@@ -35,31 +32,21 @@ namespace ModuleBased
         private ILogger _logger;
 
         #region -- Constructors --
-        public GameCore(ILogger logger, bool enableProxy = false)
+
+
+        public GameCore(ILogger logger)
         {
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
-
-            if (enableProxy)
-            {
-                var proxyFactory = new DefaultModuleProxyFactory();
-                Modules = new GameModuleProxyCollection(logger, proxyFactory);
-            }
-            else
-                Modules = new DefaultGameModuleCollection(logger);
+            Modules = new DefaultGameModuleCollection(logger);
             Views = new DefaultGameViewCollection(logger, Modules);
         }
-
-        public GameCore(ILogger logger, IModuleProxyFactory proxyFactory)
+        
+        public GameCore(ILogger logger, IGameModuleCollection modules)
         {
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
-            if (proxyFactory != null)
-            {
-                Modules = new GameModuleProxyCollection(logger, proxyFactory);
-            }
-            else
-                Modules = new DefaultGameModuleCollection(logger);
+            Modules = modules;
             Views = new DefaultGameViewCollection(logger, Modules);
         }
         #endregion
@@ -75,8 +62,8 @@ namespace ModuleBased
             }
             Observable
                 .ForEach(Modules, (mod) => Observable.Progress<ProgressInfo>(mod.InitializeModule))
-                .Batch(5)
-                //.WhenAll()
+                //.Batch(5)
+                .WhenAll()
                 .Subscribe(
                     (infos) => { },
                     (error) => _logger.LogError(error),
