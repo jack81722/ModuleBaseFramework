@@ -77,7 +77,7 @@ GameCore會主動注入指定有```[RequireDao]```標籤的Dao，用法同```[Re
 或是利用已經完成的```AOPProxy```來快速處理AOP架構，使用步驟如下：
 1. 宣告介面並分別宣告class與proxy
 2. 對欲使用Proxy的class用```ProxyAttribute```指定Proxy型別
-3. 透過DefaultProxyFactory來產生封裝後的Proxy；或是交由GameCore產生
+3. 透過DefaultProxyFactory來產生封裝後的Proxy；或是交由GameCore產生</br>
 AOPProxy可在指定的方法上附加須執行的Attribute，便可實作出自定義的Before, After, Around及Error呼叫；或是您也可以建立網路連線的Proxy來同步邏輯。
 
 ```csharp
