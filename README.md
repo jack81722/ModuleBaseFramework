@@ -52,6 +52,7 @@ public interface IFileDao{
     string ReadJsonFile(string path);
 }
 ```
+
 ### View
 View如同GameModule有自己的初始化機制，並且與GameModule同樣能使用DI功能，在初始化階段註冊行為或取得Module參照；View通常與MonoBehaviour一起使用。
 ## Features
