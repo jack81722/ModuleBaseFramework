@@ -107,5 +107,5 @@ public class CustomProxy : AOPProxy<CustomModule>, ICustom {
 ## Future
 - Dao async and loading mechanism
 - Initialize mechanism
--
+- View modification
 
