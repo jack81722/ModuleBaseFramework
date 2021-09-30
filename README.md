@@ -72,6 +72,12 @@ public class WeatherModule : MonoBehaviour, IGameModule {
 ```
 - **RequireDao**
 GameCore會主動注入指定有```[RequireDao]```標籤的Dao，用法同```[RequireModule]```。
+```csharp
+public class WeatherModule : MonoBehaviour, IGameModule{
+    [RequireDao]
+    private IOtherDao _
+}
+```
 
 ### Proxy & AOP (Aspect-oriented programming)
 你可以藉由自訂Proxy來實現額外且解耦的邏輯，利用```ModuleBased.Proxy```庫中的方法與類別來實現，由最基本的```ProxyBase```與```ProxyBase<T>```來進行Proxy邏輯的擴充；
