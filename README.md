@@ -75,7 +75,7 @@ GameCore會主動注入指定有```[RequireDao]```標籤的Dao，用法同```[Re
 ```csharp
 public class WeatherModule : MonoBehaviour, IGameModule{
     [RequireDao]
-    private IOtherDao _
+    private IOtherDao _otherDao;
 }
 ```
 
