@@ -32,14 +32,12 @@ namespace ModuleBased
         private ILogger _logger;
 
         #region -- Constructors --
-
-
         public GameCore(ILogger logger)
         {
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
-            Modules = new DefaultGameModuleCollection(logger);
-            Views = new DefaultGameViewCollection(logger, Modules);
+            Modules = new DefaultGameModuleCollection();
+            Views = new DefaultGameViewCollection();
         }
         
         public GameCore(ILogger logger, IGameModuleCollection modules)
@@ -47,7 +45,7 @@ namespace ModuleBased
             _logger = logger;
             Daos = new DefaultGameDaoCollection();
             Modules = modules;
-            Views = new DefaultGameViewCollection(logger, Modules);
+            Views = new DefaultGameViewCollection();
         }
         #endregion
 
@@ -62,7 +60,6 @@ namespace ModuleBased
             }
             Observable
                 .ForEach(Modules, (mod) => Observable.Progress<ProgressInfo>(mod.InitializeModule))
-                //.Batch(5)
                 .WhenAll()
                 .Subscribe(
                     (infos) => { },
@@ -74,7 +71,14 @@ namespace ModuleBased
                         _isInit = true;
                     }
                 );
+            foreach(var view in Views)
+            {
+                view.Logger = _logger;
+                view.Modules = Modules;
+                view.InitializeView();
+            }
         }
+
 
         #endregion
 
@@ -105,57 +109,5 @@ namespace ModuleBased
 
 
 
-        #region -- Add/Remove module methods --
-        /// <summary>
-        /// Added module by interface key
-        /// </summary>
-        public void AddModule(Type itfType, Type modType)
-        {
-            IGameModule mod = Modules.AddModule(itfType, modType);
-            CheckInitializeAndStart(mod);
-        }
-
-        public void AddModule(Type itfType, IGameModule mod)
-        {
-            Modules.AddModule(itfType, mod);
-            CheckInitializeAndStart(mod);
-        }
-
-        public void AddModule<TItf, TMod>() where TItf : class where TMod : IGameModule, TItf
-        {
-            IGameModule mod = Modules.AddModule<TItf, TMod>();
-            CheckInitializeAndStart(mod);
-        }
-
-        public void AddModule<TItf>(IGameModule mod) where TItf : class
-        {
-            Modules.AddModule<TItf>(mod);
-            CheckInitializeAndStart(mod);
-        }
-
-        private void CheckInitializeAndStart(IGameModule mod)
-        {
-            if (_isInit)
-            {
-                AssignLogger(mod);
-                IObservable<ProgressInfo> observable = new ProgressObservable<ProgressInfo>(mod.InitializeModule);
-                observable.Subscribe(
-                    (p) => { },
-                    (e) => { },
-                    () =>
-                    {
-
-                        AssignRequiredModule(mod.GetType(), mod);
-                        AssignRequiredDao(mod.GetType(), mod);
-                    });
-
-
-            }
-            if (_isStart)
-            {
-                StartModule(mod);
-            }
-        }
-        #endregion
     }
 }

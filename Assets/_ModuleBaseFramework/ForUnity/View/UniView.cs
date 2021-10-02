@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -15,15 +16,33 @@ namespace ModuleBased.ForUnity
 
         protected void Awake()
         {
-            Transform parent = transform.parent;
-            if (parent == null)
-                return;
-            // register self under the parent
-            UniView parentView = parent.GetComponent<UniView>();
-            if (parentView != null)
+            RefreshParent();
+        }
+
+        protected void ApplyView()
+        {
+            RefreshParent();
+            // initialize added child
+            _childList = _childList.Union(_addTemp).ToList();
+            if (IsInit)
             {
-                parentView.AddNode(this);
+                foreach (var add in _addTemp)
+                {
+                    var view = add as UniView;
+                    if (view == null)
+                        continue;
+                    if (!view.IsInit)
+                        view.InitializeView();
+                    view.ApplyView();
+                }
             }
+            _addTemp.Clear();
+            // refresh removed children
+            foreach (var rm in _removeTemp)
+            {
+                (rm as UniView)?.ApplyView();
+            }
+            _removeTemp.Clear();
         }
 
         #region -- IGameView --
@@ -33,14 +52,28 @@ namespace ModuleBased.ForUnity
 
         public void InitializeView()
         {
-            foreach(var child in childList)
+            _childList = new List<INode>();
+            _addTemp = new List<INode>();
+            _removeTemp = new List<INode>();
+            RefreshParent();
+            try
             {
-                var childView = child as UniView;
+                OnBeginInitializeView();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
+            foreach (var child in _childList)
+            {
+                var childView = child as IGameView;
+                childView.Logger = Logger;
+                childView.Modules = Modules;
                 childView.InitializeView();
             }
             try
             {
-                OnInitializeView();
+                OnEndInitializeView();
             }
             catch (Exception e)
             {
@@ -50,17 +83,21 @@ namespace ModuleBased.ForUnity
             IsInit = true;
         }
 
+
+
         /// <summary>
         /// Custom initialize
         /// </summary>
-        protected virtual void OnInitializeView() { }
+        protected virtual void OnBeginInitializeView() { }
+
+        protected virtual void OnEndInitializeView() { }
         #endregion
 
         #region -- INode --
         private INode _parent;
-        public INode Parent
-        {
-            get => _parent; set
+        public INode Parent {
+            get => _parent;
+            set
             {
                 _parent = value;
                 var mono = _parent as MonoBehaviour;
@@ -78,8 +115,7 @@ namespace ModuleBased.ForUnity
         /// <summary>
         /// The name of view in path
         /// </summary>
-        public virtual string PathName
-        {
+        public virtual string PathName {
             get
             {
                 if (Parent == null)
@@ -88,44 +124,20 @@ namespace ModuleBased.ForUnity
             }
         }
 
-        public string NodePath
-        {
+        public string NodePath {
             get
             {
                 if (Parent == null)
                     return Name;
-                return Parent.NodePath + NodeUtils.PathSepChar + PathName;
+                return Parent.ToString() + NodeUtils.PathSepChar + PathName;
             }
         }
 
         public int IndexOf(INode node)
         {
-            int at = childList.IndexOf(node);
-            if (at < 0)
-                throw new InvalidOperationException("The view is not in collection.");
-            // if name of node is same, index will plus
-            // such as (image_0, image_1, ...)
-            int index = 0;
-            for (int i = 0; i < at; i++)
-            {
-                if (childList[i].Name == node.Name)
-                    index++;
-            }
-
-            return index;
+            return _childList.IndexOf(node);
         }
 
-        public bool TryGetNode(string pathName, out INode node)
-        {
-            int index = childList.FindIndex(v => v.PathName == pathName);
-            if (index < 0)
-            {
-                node = null;
-                return false;
-            }
-            node = childList[index];
-            return true;
-        }
 
         /// <summary>
         /// Add node under this node
@@ -140,73 +152,83 @@ namespace ModuleBased.ForUnity
             if (ReferenceEquals(node.Parent, this))
                 return;
             node.Parent = this;
-            childList.Add(node);
-
-            // try initialize
-            IGameView view = node as IGameView;
-            if (view != null)
-            {
-                view.Logger = Logger;
-                AssignRequiredModules(view);
-                if (IsInit)
-                {
-                    view.InitializeView();
-                }
-            }
+            _addTemp.Add(node);
         }
 
-        public bool RemoveNode(string pathName)
-        {
-            bool result = TryGetNode(pathName, out INode node);
-            if (result)
-                childList.Remove(node);
-            return result;
-        }
 
         public bool RemoveNode(INode node)
         {
-            return RemoveNode(node.PathName);
+            var i = IndexOf(node);
+            if (i < 0)
+            {
+                return false;
+            }
+            _removeTemp.Add(_childList[i]);
+            _childList.RemoveAt(i);
+            return true;
+        }
+
+        private void RefreshParent()
+        {
+            Transform parent = transform.parent;
+            if (parent == null)
+                return;
+            // register self under the parent
+            INode parentView = parent.GetComponent<INode>();
+            if (parentView != null)
+            {
+                parentView.AddNode(this);
+            }
         }
         #endregion
 
         #region -- Child view methods --
         private List<INode> _childList;
-        private List<INode> childList
-        {
-            get
-            {
-                if (_childList == null)
-                {
-                    _childList = new List<INode>();
-                }
-                return _childList;
-            }
-        }
-
-        /// <summary>
-        /// Get view under this view with specific type and path
-        /// </summary>
-        public T GetView<T>(string path) where T : MonoBehaviour
-        {
-            INode node = this.GetNode(path);
-            UniView view = node as UniView;
-            if (view == null)
-                return null;
-            return view.Convert<T>();
-        }
+        private List<INode> _addTemp;
+        private List<INode> _removeTemp;
 
         public bool TryGetView<T>(string pathName, out T view) where T : class
         {
-            bool result = TryGetNode(pathName, out INode node);
+            bool result = TryGetChild(pathName, out INode node);
             view = node as T;
+            return result;
+        }
+
+
+        public bool TryGetChild(string pathName, out INode node)
+        {
+            int index = _childList.FindIndex(v =>
+            {
+                var child = v as UniView;
+                if (child == null)
+                {
+                    return false;
+                }
+                return child.PathName == pathName;
+            });
+            if (index < 0)
+            {
+                node = null;
+                return false;
+            }
+            node = _childList[index];
+            return true;
+        }
+
+
+        public bool RemoveChild(string pathName)
+        {
+            bool result = TryGetChild(pathName, out INode node);
+            if (result)
+                _childList.Remove(node);
             return result;
         }
 
         public IEnumerable<INode> GetChildren()
         {
-            if (childList == null)
+            if (_childList == null)
                 return new INode[0];
-            return (IReadOnlyList<INode>)childList;
+            return (IReadOnlyList<INode>)_childList;
         }
         #endregion
 
@@ -220,17 +242,20 @@ namespace ModuleBased.ForUnity
             {
                 if (member.IsDefined(typeof(RequireModuleAttribute)))
                 {
-                    if (member.MemberType == MemberTypes.Field)
+                    Type reqType;
+                    switch (member.MemberType)
                     {
-                        FieldInfo field = (FieldInfo)member;
-                        Type reqType = field.FieldType;
-                        field.SetValue(instance, Modules.GetModule(reqType));
-                    }
-                    if (member.MemberType == MemberTypes.Property)
-                    {
-                        PropertyInfo prop = (PropertyInfo)member;
-                        Type reqType = prop.PropertyType;
-                        prop.SetValue(instance, Modules.GetModule(reqType));
+                        case MemberTypes.Field:
+
+                            FieldInfo field = (FieldInfo)member;
+                            reqType = field.FieldType;
+                            field.SetValue(instance, Modules.GetModule(reqType));
+                            break;
+                        case MemberTypes.Property:
+                            PropertyInfo prop = (PropertyInfo)member;
+                            reqType = prop.PropertyType;
+                            prop.SetValue(instance, Modules.GetModule(reqType));
+                            break;
                     }
                 }
             }
@@ -279,5 +304,12 @@ namespace ModuleBased.ForUnity
             return txt;
         }
         #endregion
+
+        public override string ToString()
+        {
+            return NodePath;
+        }
     }
+
+
 }

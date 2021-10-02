@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 
 namespace ModuleBased {
-    public interface IGameViewCollection {
+    public interface IGameViewCollection : IEnumerable<IGameView>, IEnumerable {
         void AddView(IGameView view);
-
-        void InitializeViews();
     }
 }

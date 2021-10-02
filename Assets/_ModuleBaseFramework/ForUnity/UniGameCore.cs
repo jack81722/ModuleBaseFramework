@@ -120,7 +120,7 @@ namespace ModuleBased.ForUnity
                 _logger = new UniLogger();
             if (_core == null)
             {
-                IGameModuleCollection collection = new DefaultGameModuleCollection(_logger);
+                IGameModuleCollection collection = new DefaultGameModuleCollection();
                 if (UseProxy)
                 {   
                     var proxyFactory = new Proxy.DefaultProxyFactory();
@@ -167,7 +167,6 @@ namespace ModuleBased.ForUnity
         public void InitializeAll()
         {
             _core.InstantiateCore();
-            Views.InitializeViews();
         }
         #endregion
 
