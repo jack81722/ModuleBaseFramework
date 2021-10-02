@@ -11,7 +11,12 @@ namespace ModuleBased.Proxy.AOP
 
         public AOPProxy(T real) : base(real)
         {
-            var members = real.GetType().GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            searchInjection();
+        }
+
+        private void searchInjection()
+        {
+            var members = realObj.GetType().GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (var member in members)
             {
                 var attrs = member.GetCustomAttributes(typeof(AOPAttribute), true);
