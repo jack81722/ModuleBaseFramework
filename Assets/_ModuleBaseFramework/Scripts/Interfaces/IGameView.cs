@@ -8,5 +8,6 @@ namespace ModuleBased {
 
         void InitializeView();
 
+        void ApplyView();
     }
 }

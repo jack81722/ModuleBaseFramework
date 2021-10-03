@@ -12,35 +12,58 @@ namespace ModuleBased.ForUnity
 {
     public class UniView : MonoBehaviour, IGameView, INode
     {
+        #region -- Exceptions --
+        protected static readonly Exception ErrNotInit = new InvalidOperationException("The view is not initialized.");
+        protected static readonly Exception ErrNodeNull = new ArgumentNullException("The node is null.");
+        protected static readonly Exception ErrLoopView = new InvalidOperationException("The node wanted to add must be not making loop.");
+        #endregion
+
         protected bool IsInit { get; private set; }
 
         protected void Awake()
         {
-            RefreshParent();
+            ReTransform();
         }
 
-        protected void ApplyView()
+        protected void OnDestroy()
         {
-            RefreshParent();
+            try
+            {
+                OnDestroyView();
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning(e.Message);
+            }
+            finally
+            {
+                if (Parent != null)
+                    Parent.RemoveNode(this);
+            }
+        }
+
+        public void ApplyView()
+        {
+            ReTransform();
             // initialize added child
             _childList = _childList.Union(_addTemp).ToList();
             if (IsInit)
             {
-                foreach (var add in _addTemp)
+                foreach (var node in _addTemp)
                 {
-                    var view = add as UniView;
+                    var view = node as IGameView;
                     if (view == null)
                         continue;
-                    if (!view.IsInit)
-                        view.InitializeView();
-                    view.ApplyView();
+                    if (!node.Under(this))
+                        continue;
+                    view.InitializeView();
                 }
             }
             _addTemp.Clear();
             // refresh removed children
-            foreach (var rm in _removeTemp)
+            foreach (var node in _removeTemp)
             {
-                (rm as UniView)?.ApplyView();
+                (node as IGameView)?.ApplyView();
             }
             _removeTemp.Clear();
         }
@@ -52,10 +75,13 @@ namespace ModuleBased.ForUnity
 
         public void InitializeView()
         {
+            if (IsInit)
+                return;
             _childList = new List<INode>();
             _addTemp = new List<INode>();
             _removeTemp = new List<INode>();
-            RefreshParent();
+            IsInit = true;
+            AssignRequiredModules(this);
             try
             {
                 OnBeginInitializeView();
@@ -64,6 +90,7 @@ namespace ModuleBased.ForUnity
             {
                 Logger.LogError(e);
             }
+            ApplyView();
             foreach (var child in _childList)
             {
                 var childView = child as IGameView;
@@ -80,17 +107,28 @@ namespace ModuleBased.ForUnity
                 Logger.LogError(e);
             }
 
-            IsInit = true;
         }
 
-
-
         /// <summary>
-        /// Custom initialize
+        /// Begin phase of initialization
         /// </summary>
+        /// <remarks>
+        /// May instantiate or add children view in this phase.
+        /// </remarks>
         protected virtual void OnBeginInitializeView() { }
 
+        /// <summary>
+        /// End phase of initialization
+        /// </summary>
+        /// <remarks>
+        /// The view almost complete the initialization, may get access of parent or children
+        /// </remarks>
         protected virtual void OnEndInitializeView() { }
+
+        /// <summary>
+        /// Destroy view
+        /// </summary>
+        protected virtual void OnDestroyView() { }
         #endregion
 
         #region -- INode --
@@ -135,6 +173,8 @@ namespace ModuleBased.ForUnity
 
         public int IndexOf(INode node)
         {
+            if (!IsInit)
+                throw ErrNotInit;
             return _childList.IndexOf(node);
         }
 
@@ -142,19 +182,24 @@ namespace ModuleBased.ForUnity
         /// <summary>
         /// Add node under this node
         /// </summary>
+        /// <exception cref="ArgumentNullException">The node is null.</exception>
+        /// <exception cref="InvalidOperationException">"The view is not initialized."</exception>
         /// <exception cref="InvalidOperationException">The node wanted to add must be not making loop.</exception>
         public void AddNode(INode node)
         {
+            if (node == null)
+                throw ErrNodeNull;
+            if (!IsInit)
+                throw ErrNotInit;
             // check if the node is not the parent
             if (this.Under(node))
-                throw new InvalidOperationException("The node wanted to add must be not making loop.");
+                throw ErrLoopView;
             // check if has existed
             if (ReferenceEquals(node.Parent, this))
                 return;
             node.Parent = this;
             _addTemp.Add(node);
         }
-
 
         public bool RemoveNode(INode node)
         {
@@ -168,17 +213,14 @@ namespace ModuleBased.ForUnity
             return true;
         }
 
-        private void RefreshParent()
+        private void ReTransform()
         {
-            Transform parent = transform.parent;
-            if (parent == null)
+            if (Parent == null)
                 return;
-            // register self under the parent
-            INode parentView = parent.GetComponent<INode>();
-            if (parentView != null)
-            {
-                parentView.AddNode(this);
-            }
+            Component comp = Parent as Component;
+            if (comp == null)
+                return;
+            transform.SetParent(comp.transform);
         }
         #endregion
 
@@ -233,7 +275,7 @@ namespace ModuleBased.ForUnity
         #endregion
 
         #region -- DI methods --
-        private void AssignRequiredModules(object instance)
+        private void AssignRequiredModules(IGameView instance)
         {
             Type objType = instance.GetType();
             MemberInfo[] members = objType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
