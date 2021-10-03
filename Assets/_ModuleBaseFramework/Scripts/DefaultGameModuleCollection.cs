@@ -9,13 +9,11 @@ namespace ModuleBased
     public class DefaultGameModuleCollection : IGameModuleCollection
     {
         private Dictionary<Type, IGameModule> _modules;
-        private ILogger _logger;
 
         public int Count => _modules.Count;
 
-        public DefaultGameModuleCollection(ILogger logger)
+        public DefaultGameModuleCollection()
         {
-            _logger = logger;
             _modules = new Dictionary<Type, IGameModule>();
         }
 
@@ -47,7 +45,6 @@ namespace ModuleBased
             if (!itfType.IsAssignableFrom(modType))
                 throw new ArgumentException($"Module({modType.Name}) is not implemented by interface({itfType.Name}).");
             _modules.Add(itfType, mod);
-            InvokeAddedEvent(itfType, mod);
         }
         #endregion
 
@@ -107,18 +104,6 @@ namespace ModuleBased
                 throw new ArgumentNullException($"Module type is null.");
             if (typeof(IGameModule).IsAssignableFrom(type))
                 throw new ArgumentException($"Module type must be implemented by IGameModule");
-        }
-
-        private void InvokeAddedEvent(Type itfType, IGameModule mod)
-        {
-            try
-            {
-                mod.Modules = this;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e);
-            }
         }
         #endregion
 

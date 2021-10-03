@@ -11,6 +11,11 @@ namespace ModuleBased
             module.Logger = _logger;
         }
 
+        private void AssignLogger(IGameView view)
+        {
+            view.Logger = _logger;
+        }
+
         private void AssignRequiredModules()
         {
             foreach (var modInst in Modules)

@@ -7,5 +7,7 @@ namespace ModuleBased {
         IGameModuleCollection Modules { get; set; }
 
         void InitializeView();
+
+        void ApplyView();
     }
 }
