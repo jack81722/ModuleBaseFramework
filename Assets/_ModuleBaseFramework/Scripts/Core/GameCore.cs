@@ -39,7 +39,7 @@ namespace ModuleBased
             Modules = new DefaultGameModuleCollection();
             Views = new DefaultGameViewCollection();
         }
-        
+
         public GameCore(ILogger logger, IGameModuleCollection modules)
         {
             _logger = logger;
@@ -71,11 +71,18 @@ namespace ModuleBased
                         _isInit = true;
                     }
                 );
-            foreach(var view in Views)
+            foreach (var view in Views)
             {
                 view.Logger = _logger;
                 view.Modules = Modules;
-                view.InitializeView();
+                try
+                {
+                    view.InitializeView();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e);
+                }
             }
         }
 
