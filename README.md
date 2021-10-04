@@ -140,4 +140,4 @@ public class CustomProxy : AOPProxy<CustomModule>, ICustom {
 - Dao async and loading mechanism
 - Initialize mechanism
 - View modification
-
+- Code generation
