@@ -2,6 +2,8 @@
 ## Introduction
 This is a framework for Unity as C# MVC. With the framework, it would help you to focus how to maintain your game logic without worrying about the initialization and dependence of other scripts.
 
+## I
+
 ## Quick Start
 Coming soon...
 
