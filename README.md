@@ -139,7 +139,7 @@ public class CustomProxy : AOPProxy<CustomModule>, ICustom {
 如一般Reactive的使用方式，可以像UniRx或其他任何Rx一樣使用本框架提供的方法。
 
 ## Future
-- Repo, Service layer
+- Repo, Service, Model layer
 - Initialize mechanism
 - View modification
 - Code generation
