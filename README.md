@@ -2,6 +2,8 @@
 ## Introduction
 This is a framework for Unity as C# MVC. With the framework, it would help you to focus how to maintain your game logic without worrying about the initialization and dependence of other scripts.
 
+## Installation
+
 ## Quick Start
 Coming soon...
 
@@ -54,10 +56,30 @@ public interface IFileDao{
 ```
 
 ### View
-View如同GameModule有自己的初始化機制，並且與GameModule同樣能使用DI功能，在初始化階段註冊行為或取得Module參照；View通常與MonoBehaviour一起使用。
+View有自己的初始化機制，在初始化階段透過系統提供的Module Collection提取需要的Module，並取得Module參照來註冊行為。View通常與MonoBehaviour一起使用，你可以繼承框架提供的UniView，UniView有內建的節點機制來輔助整理View物件的Hierarchy，並且UniView提供更完整的機制來處理View的生命週期；
 ```csharp
-public class CharacterView : MonoBehaviour, IView {
+public class WeatherView : UniView {
+    protected override OnBeginInitializeView() {
+        // you may add other uniview here
+    }
+    
+    protected override OnEndInitializeView() {
+        // handle access of other child views
+    }
+    
+    protected override OnDestroyView() {
+        // custom your destroy mechanism
+    }
+}
+```
+如果你不需要過於複雜的View機制，亦可以自行宣告MonoBehaviour並實作IGameView，定義自己的View行為。
+```csharp
+public class CharacterView : MonoBehaviour, IGameView {
+    ...
+
     public void InitializeView() { }
+    
+    public void ApplyView() { }
 }
 ```
 
@@ -117,7 +139,7 @@ public class CustomProxy : AOPProxy<CustomModule>, ICustom {
 如一般Reactive的使用方式，可以像UniRx或其他任何Rx一樣使用本框架提供的方法。
 
 ## Future
-- Dao async and loading mechanism
+- Repo, Service, Model layer
 - Initialize mechanism
 - View modification
-
+- Code generation
