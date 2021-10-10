@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using UnityEngine;
 
 namespace ModuleBased.Injection
@@ -37,6 +38,11 @@ namespace ModuleBased.Injection
             return reg;
         }
 
+        internal Registration[] SelectContract(Type contractType)
+        {
+            return _regList.FindAll((reg) => reg.ContractTypes.Exists((contract) => contract == contractType)).ToArray();
+        }
+
     }
 
     public static class ContainerExtension
@@ -64,7 +70,12 @@ namespace ModuleBased.Injection
 
         public static Registration Concrete<T>(this Registration reg)
         {
-            reg.ConcreteType = typeof(T);
+            Type concreteType = typeof(T);
+            if (!Assert.HasContract(reg))
+                throw Errors.ErrContractEmpty;
+            if (!Assert.MatchContract(reg, concreteType))
+                throw Errors.ErrContractNotMatched;
+            reg.ConcreteType = concreteType;
             return reg;
         }
 
@@ -83,6 +94,12 @@ namespace ModuleBased.Injection
         public static Registration AsScoped(this Registration reg)
         {
             reg.ContractScope = EContractScope.Scoped;
+            return reg;
+        }
+
+        public static Registration Identity(this Registration reg, object identity)
+        {
+            reg.Identity = identity;
             return reg;
         }
 
@@ -114,6 +131,7 @@ namespace ModuleBased.Injection
 
     public class Registration
     {
+        internal object Identity;
         internal List<Type> ContractTypes;
         internal EContractScope ContractScope = EContractScope.Singleton;
         internal Type ConcreteType;
@@ -124,6 +142,34 @@ namespace ModuleBased.Injection
         public Registration()
         {
             ContractTypes = new List<Type>();
+        }
+    }
+
+    internal class Errors
+    {
+        public static readonly Exception ErrContractEmpty = new Exception("Contract types are empty.");
+        public static readonly Exception ErrContractNotMatched = new Exception("Concrete type is not the subclass or implement of contract.");
+
+    }
+
+
+
+    internal static class Assert
+    {
+        public static bool HasContract(Registration reg)
+        {
+            return reg.ContractTypes != null && reg.ContractTypes.Count > 0;
+        }
+
+        public static bool MatchContract(Registration reg, Type concreteType)
+        {
+            return reg.ContractTypes.TrueForAll((t) =>
+            {
+                return
+                   t.IsAssignableFrom(concreteType) ||
+                   concreteType.IsSubclassOf(t) ||
+                   t == concreteType;
+            });
         }
     }
 
@@ -142,6 +188,10 @@ namespace ModuleBased.Injection
         }
 
         public abstract void Inject(object target, MethodInfo method);
+
+        //public abstract void Inject(object target, FieldInfo field);
+
+        //public abstract void Inject(object target, PropertyInfo field);
 
         protected object InstantiateConcreteType()
         {
@@ -185,18 +235,76 @@ namespace ModuleBased.Injection
 
     public class Injector
     {
-        private HashSet<object> _injectables = new HashSet<object>();
+        private static readonly Type InjectAttrType = typeof(InjectAttribute);
+
         private Container _container;
 
-        public void BindProvider()
-        {
 
+        public void Inject(object target)
+        {
+            var targetType = target.GetType();
+            var members = targetType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var member in members)
+            {
+                if (member.IsDefined(InjectAttrType))
+                {
+                    var attr = (InjectAttribute)member.GetCustomAttribute(InjectAttrType);
+                    if (member.MemberType == MemberTypes.Field)
+                    {
+                        var field = (FieldInfo)member;
+                        var contractType = field.FieldType;
+                        var candidates = _container.SelectContract(contractType);
+                        if (candidates.Length <= 0)
+                            continue;
+                        if (candidates.Length > 1)
+                        {
+                            candidates = candidates.Where((candidate) => candidate.Identity == attr.Identity).ToArray();
+                            if (candidates.Length > 1)
+                            {
+                                throw new Exception("Inject candidate too much.");
+                            }
+                        }
+                        var reg = candidates[0];
+                        switch (reg.ContractScope)
+                        {
+                            case EContractScope.Singleton:
+                                if (reg.ConcreteInstance == null)
+                                    reg.ConcreteInstance = InstantiateConcreteType(reg);
+                                field.SetValue(target, reg.ConcreteInstance);
+                                break;
+                            case EContractScope.Transient:
+                                field.SetValue(target, InstantiateConcreteType(reg));
+                                break;
+                        }
+                    }
+                }
+            }
         }
 
-        public void AnalyseReflection()
+        protected object InstantiateConcreteType(Registration reg)
         {
-
+            object instance;
+            if (reg.Factory != null)
+            {
+                instance = reg.Factory.Create(reg.Args);
+            }
+            else
+            {
+                instance = Activator.CreateInstance(reg.ConcreteType, reg.Args);
+            }
+            return instance;
         }
-        
+
+    }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    public class InjectAttribute : Attribute
+    {
+        public object Identity { get; }
+
+        public InjectAttribute(object identity)
+        {
+            Identity = identity;
+        }
     }
 }
