@@ -140,6 +140,7 @@ public class CustomProxy : AOPProxy<CustomModule>, ICustom {
 
 ## Future
 - Repo, Service, Model layer
-- Initialize mechanism
+- Inject mechanism
+- Trigger injection
 - View modification
 - Code generation
