@@ -237,46 +237,74 @@ namespace ModuleBased.Injection
     {
         private static readonly Type InjectAttrType = typeof(InjectAttribute);
 
+        private Dictionary<Type, List<InjectBinding>> _bindings = new Dictionary<Type, List<InjectBinding>>();
+
         private Container _container;
 
+        public List<InjectBinding> Analyze(Type targetType)
+        {
+            var members = targetType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (!_bindings.TryGetValue(targetType, out List<InjectBinding> bindings))
+            {
+                bindings = new List<InjectBinding>();
+                _bindings.Add(targetType, bindings);
+            }
+            foreach (var member in members)
+            {
+                if (!member.IsDefined(InjectAttrType))
+                    continue;
+                var info = new InjectInfo(member);
+                ContractProviderBase provider;
+                var regs = _container.SelectContract(info.RequiredContractType);
+                if (regs.Length < 0)
+                    continue;
+                if (regs.Length > 1)
+                {
+                    regs = regs.Where((candidate) => candidate.Identity == info.Identity).ToArray();
+                    if (regs.Length > 1)
+                    {
+                        throw new Exception("Inject candidate too much.");
+                    }
+                }
+                var reg = regs[0];
+                switch (reg.ContractScope)
+                {
+                    case EContractScope.Singleton:
+                        provider = new SingletonProvider(reg);
+                        break;
+                    case EContractScope.Transient:
+                        provider = new TransientProvider(reg);
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unknown contract scope.");
+                }
+                var binding = new InjectBinding(info, reg, provider);
+                bindings.Add(binding);
+            }
+            return bindings;
+        }
 
         public void Inject(object target)
         {
             var targetType = target.GetType();
-            var members = targetType.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            foreach (var member in members)
+            if (!_bindings.TryGetValue(targetType, out List<InjectBinding> bindings))
             {
-                if (member.IsDefined(InjectAttrType))
+                bindings = Analyze(targetType);
+            }
+            foreach (var binding in bindings)
+            {
+                var info = binding.InjectInfo;
+                var reg = binding.Registration;
+                switch (reg.ContractScope)
                 {
-                    var attr = (InjectAttribute)member.GetCustomAttribute(InjectAttrType);
-                    if (member.MemberType == MemberTypes.Field)
-                    {
-                        var field = (FieldInfo)member;
-                        var contractType = field.FieldType;
-                        var candidates = _container.SelectContract(contractType);
-                        if (candidates.Length <= 0)
-                            continue;
-                        if (candidates.Length > 1)
-                        {
-                            candidates = candidates.Where((candidate) => candidate.Identity == attr.Identity).ToArray();
-                            if (candidates.Length > 1)
-                            {
-                                throw new Exception("Inject candidate too much.");
-                            }
-                        }
-                        var reg = candidates[0];
-                        switch (reg.ContractScope)
-                        {
-                            case EContractScope.Singleton:
-                                if (reg.ConcreteInstance == null)
-                                    reg.ConcreteInstance = InstantiateConcreteType(reg);
-                                field.SetValue(target, reg.ConcreteInstance);
-                                break;
-                            case EContractScope.Transient:
-                                field.SetValue(target, InstantiateConcreteType(reg));
-                                break;
-                        }
-                    }
+                    case EContractScope.Singleton:
+                        if (reg.ConcreteInstance == null)
+                            reg.ConcreteInstance = InstantiateConcreteType(reg);
+                        info.Inject(target, reg.ConcreteInstance);
+                        break;
+                    case EContractScope.Transient:
+                        info.Inject(target, InstantiateConcreteType(reg));
+                        break;
                 }
             }
         }
@@ -295,6 +323,68 @@ namespace ModuleBased.Injection
             return instance;
         }
 
+    }
+
+    public class InjectBinding
+    {
+        public InjectInfo InjectInfo;
+        public Registration Registration;
+        public ContractProviderBase Provider;
+
+        public InjectBinding(InjectInfo info, Registration reg, ContractProviderBase provider)
+        {
+            InjectInfo = info;
+            Registration = reg;
+            Provider = provider;
+        }
+    }
+
+    public class InjectInfo
+    {
+        private static readonly Type InjectAttrType = typeof(InjectAttribute);
+
+        private MemberInfo _member;
+        private MemberTypes _memberType;
+
+        public object Identity { get; private set; }
+        public Type RequiredContractType { get; private set; }
+
+        public InjectInfo(MemberInfo member)
+        {
+            if (!member.IsDefined(InjectAttrType))
+                throw new Exception("Must be defined inject attribute.");
+            var attr = (InjectAttribute)member.GetCustomAttribute(InjectAttrType);
+            Identity = attr.Identity;
+            _member = member;
+            _memberType = member.MemberType;
+            switch (member.MemberType)
+            {
+                case MemberTypes.Field:
+                    var field = (FieldInfo)member;
+                    RequiredContractType = field.FieldType;
+                    break;
+                case MemberTypes.Property:
+                    var prop = (PropertyInfo)member;
+                    RequiredContractType = prop.PropertyType;
+                    break;
+            }
+
+        }
+
+        public void Inject(object target, object concreteObj)
+        {
+            switch (_memberType)
+            {
+                case MemberTypes.Field:
+                    var field = (FieldInfo)_member;
+                    field.SetValue(target, concreteObj);
+                    break;
+                case MemberTypes.Property:
+                    var prop = (PropertyInfo)_member;
+                    prop.SetValue(target, concreteObj);
+                    break;
+            }
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
