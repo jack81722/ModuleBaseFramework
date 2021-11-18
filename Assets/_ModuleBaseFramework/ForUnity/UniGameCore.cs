@@ -1,4 +1,6 @@
 ﻿using ModuleBased.DAO;
+using ModuleBased.Injection;
+using ModuleBased.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +10,7 @@ using UnityEngine.SceneManagement;
 
 namespace ModuleBased.ForUnity
 {
-    public class UniGameCore : MonoBehaviour, IGameCore
+    public class UniGameCore : MonoBehaviour
     {
         #region -- Singleton --
         /// <summary>
@@ -31,195 +33,208 @@ namespace ModuleBased.ForUnity
         }
         #endregion
 
-        #region -- Pirvate fields --
-
         private IGameCore _core;
 
-        private ILogger _logger;
-        #endregion
+        public IGameCore Core => _core;
 
-        #region -- IGameCore properties --
-        public IGameModuleCollection Modules => _core.Modules;
+        private Dictionary<Scene, List<KeyValuePair<Type, object>>> _injectableList;
 
-        public IGameViewCollection Views => _core.Views;
-
-        public IGameDaoCollection Daos => _core.Daos;
-        #endregion
-
-        #region -- Public fields --
-        public bool UseProxy;
-        public ScriptableObject[] CustomDaos;
-        #endregion
-
-        #region -- Unity APIs --
-        /// <summary>
-        /// Setup singleton, core, modules, and views
-        /// </summary>
-        private void Awake()
+        protected void Awake()
         {
-            if (InitializeSingleton())
-            {
-                HandoverModules();
-                InstantiateCore();
-                /*
-                 * In online game, dao layer must be waiting connection.
-                 * Module and views should wait dao initialization.
-                 */
-                InstallDaos();
-                SearchModules();
-                SearchViews();
-                InitializeAll();
-            }
+            InitializeCore();
         }
 
-        private void Start()
+        public void InitializeCore()
         {
-            StartCore();
-        }
-        #endregion
-
-        #region -- Initialize methods --
-        private bool InitializeSingleton()
-        {
-            // singleton
-            if (_singleton == null)
-            {
-                _singleton = this;
-                return true;
-            }
-            if (_singleton != this)
-            {
-                Destroy(gameObject);
-                return false;
-            }
-            return true;
+            _core = new GameCore();
+            _injectableList = new Dictionary<Scene, List<KeyValuePair<Type, object>>>();
+            Setup();
+            _core.Launch(DefaultState());
         }
 
-        /// <summary>
-        /// Handover modules from game core to another game core
-        /// </summary>
-        public void HandoverModules()
+        private void Setup()
         {
-            //var cores = FindObjectsOfType<UniGameCore>();
-            //foreach (var core in cores)
-            //{
-            //    if (core != this)
-            //    {
-            //        // handover modules
-            //        foreach (var pair in core.Modules.GetAllModules())
-            //        {
-            //            AddModule(pair.Key, pair.Value);
-            //        }
-            //    }
-            //}
+            CustomSetup(_core);
+
+            // search all injectable in children
+            SearchAndSetup(FindObjectsOfType<MonoBehaviour>());
+            SceneManager.sceneLoaded += LoadSceneAndSetup;
+            SceneManager.sceneUnloaded += UnloadSceneAndSetup;
         }
 
-        public void InstantiateCore()
+        private void SearchAndSetup(IEnumerable<MonoBehaviour> monos)
         {
-            if (_logger == null)
-                _logger = new UniLogger();
-            if (_core == null)
+            foreach(var mono in monos)
             {
-                IGameModuleCollection collection = new DefaultGameModuleCollection();
-                if (UseProxy)
-                {   
-                    var proxyFactory = new Proxy.DefaultProxyFactory();
-                    collection = new Proxy.ProxyModuleCollection(collection, proxyFactory);
-                }
-                _core = new GameCore(_logger, collection);
-            }
-        }
-
-        private void InstallDaos()
-        {
-            foreach (var dao in CustomDaos)
-            {
-                Type daoType = dao.GetType();
-                if (daoType.IsDefined(typeof(UniDaoAttribute)))
+                var monoType = mono.GetType();
+                // injectable
+                if (monoType.IsDefined(typeof(InjectableAttribute), false))
                 {
-                    var attr = daoType.GetCustomAttribute<UniDaoAttribute>();
-                    Daos.AddDao(attr.ItfType, dao);
+                    var attrs = monoType.GetCustomAttributes<InjectableAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .Concrete(monoType, mono);
+                    }
+                }
+
+                if (monoType.IsDefined(typeof(InjectableFactoryAttribute), true))
+                {
+                    var attrs = monoType.GetCustomAttributes<InjectableFactoryAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!typeof(IFactory).IsAssignableFrom(monoType))
+                        {
+                            throw new InvalidCastException($"The {monoType.Name} is not implemented factory.");
+                        }
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .FromFactory((IFactory)mono);
+                       
+                    }
                 }
             }
         }
 
-        private void SearchModules()
+        private void LoadSceneAndSetup(Scene scene, LoadSceneMode mode)
         {
-            IEnumerable<IGameModule> modules = GetComponentsInChildren<IGameModule>();
-            foreach (var module in modules)
+            var list = new List<KeyValuePair<Type, object>>();
+            _injectableList.Add(scene, list);
+            var monos = scene.GetRootGameObjects()
+                .Deverge((go) => go.GetComponentsInChildren<MonoBehaviour>());
+            var singletons = new List<object>();
+            foreach (var mono in monos)
             {
-                var attr = module.GetType().GetCustomAttribute<UniModuleAttribute>();
-                if (attr != null)
-                    Modules.AddModule(attr.ItfType, module);
-                StoreUniModule(module);
+                var monoType = mono.GetType();
+                // injectable
+                if (monoType.IsDefined(typeof(InjectableAttribute), false))
+                {
+                    var attrs = monoType.GetCustomAttributes<InjectableAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .Concrete(monoType, mono);
+                        list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
+                        if(attr.ContractScope == EContractScope.Singleton)
+                        {
+                            singletons.Add(contraction.Instantiate());
+                        }
+                    }
+                }
+
+                if (monoType.IsDefined(typeof(InjectableFactoryAttribute), true))
+                {
+                    var attrs = monoType.GetCustomAttributes<InjectableFactoryAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!typeof(IFactory).IsAssignableFrom(monoType))
+                        {
+                            throw new InvalidCastException($"The {monoType.Name} is not implemented factory.");
+                        }
+
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .FromFactory((IFactory)mono);
+                        list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
+                        if (attr.ContractScope == EContractScope.Singleton)
+                        {
+                            singletons.Add(contraction.Instantiate());
+                        }
+                    }
+                }
+            }
+
+            foreach (var singleton in singletons)
+            {
+                _core.Inject(singleton);
             }
         }
 
-        private void SearchViews()
+        private void UnloadSceneAndSetup(Scene scene)
         {
-            IGameView[] views = GetComponentsInChildren<IGameView>();
-            foreach (var view in views)
+            if(!_injectableList.TryGetValue(scene, out List<KeyValuePair<Type, object>> list))
             {
-                Views.AddView(view);
-            }
-        }
-
-        public void InitializeAll()
-        {
-            _core.InstantiateCore();
-        }
-        #endregion
-
-        public void StartCore()
-        {
-            _core.StartCore();
-        }
-
-
-        #region -- UniModule methods --
-        /// <summary>
-        /// Store the unimodule under the game core transform
-        /// </summary>
-        private void StoreUniModule(object module)
-        {
-            Type modType = module.GetType();
-            if (modType.IsSubclassOf(typeof(MonoBehaviour)))
-            {
-                ((MonoBehaviour)module).transform.parent = transform;
-            }
-        }
-
-        public void AddUniModule(object module)
-        {
-            Type modType = module.GetType();
-            if (!typeof(IGameModule).IsAssignableFrom(modType))
-            {
-                _logger.LogError($"Module({modType.Name}) is not implemented by GameModule.");
                 return;
             }
-            var attr = module.GetType().GetCustomAttribute<UniModuleAttribute>();
-            if (attr == null)
+            foreach (var injectable in list)
             {
-                _logger.LogError($"Unknown interface of module.");
-                return;
+                _core.Remove(injectable.Key, injectable.Value);
             }
-            IGameModule gm = (IGameModule)module;
-            Modules.AddModule(attr.ItfType, gm);
-
+            _injectableList.Remove(scene);
         }
-        #endregion
+
+        protected virtual void CustomSetup(IGameCore core)
+        {
+        }
+
+        protected virtual IFsmState<IGameCore> DefaultState()
+        {
+            return null;
+        }
     }
 
+    
+
     /// <summary>
-    /// Attribute of specific interface with module
+    /// Attribute of injectable monobehaviour
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class UniModuleAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    public class InjectableAttribute : Attribute
     {
-        public Type ItfType { get; }
-        public UniModuleAttribute(Type itfType)
+        public Type ContractType { get; }
+        public object Identity { get; }
+        public EContractScope ContractScope { get; }
+
+        public InjectableAttribute(Type contractType, object identity = null)
         {
-            ItfType = itfType;
+            ContractType = contractType;
+            Identity = identity;
+            ContractScope = EContractScope.Singleton;
         }
+
+        public InjectableAttribute(Type contractType, EContractScope scope, object identity = null)
+        {
+            ContractType = contractType;
+            Identity = identity;
+            ContractScope = scope;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    public class InjectableFactoryAttribute : Attribute
+    {
+        public Type ContractType { get; }
+        public object Identity { get; }
+        public EContractScope ContractScope { get; }
+
+        public InjectableFactoryAttribute(Type contractType, object identity = null)
+        {
+            ContractType = contractType;
+            Identity = identity;
+            ContractScope = EContractScope.Singleton;
+        }
+
+        public InjectableFactoryAttribute(Type contractType, EContractScope scope, object identity = null)
+        {
+            ContractType = contractType;
+            Identity = identity;
+            ContractScope = scope;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public class InjectMethodAttribute : Attribute
+    {
+
     }
 }

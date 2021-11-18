@@ -1,8 +1,9 @@
 {
     "name": "ModuleBased.Example",
-    "rootNamespace": "",
+    "rootNamespace": "ModuleBased.Example",
     "references": [
-        "GUID:4a7e3a746dd4c284bb26e935f071e962"
+        "GUID:4a7e3a746dd4c284bb26e935f071e962",
+        "GUID:63dbb7b45b107d749ab2b38a54c1b37e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

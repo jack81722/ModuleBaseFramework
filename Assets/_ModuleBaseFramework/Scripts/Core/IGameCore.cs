@@ -1,4 +1,5 @@
 ﻿using ModuleBased.DAO;
+using ModuleBased.Injection;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,28 +8,19 @@ namespace ModuleBased
 {
     public interface IGameCore
     {
-        /// <summary>
-        /// Collection of modules
-        /// </summary>
-        IGameModuleCollection Modules { get; }
+        void Launch(IFsmState<IGameCore> state = null);
 
-        ///// <summary>
-        ///// Collection of module proxies
-        ///// </summary>
-        //IGameModuleCollection ModuleProxies { get; }
+        IEnumerator Initialize();
 
-        /// <summary>
-        /// Collection of views
-        /// </summary>
-        IGameViewCollection Views { get; }
+        Contraction Add(Type contractType, object identity = null);
 
-        /// <summary>
-        /// Collection of data access objects
-        /// </summary>
-        IGameDaoCollection Daos { get; }
+        void Remove(Type contractType, object identity = null);
 
-        void InstantiateCore();
+        object Get(Type contractType, object identity = null);
 
-        void StartCore();
+        void Destroy(Type contractType, object identity = null);
+
+        void Inject(object target);
     }
+
 }

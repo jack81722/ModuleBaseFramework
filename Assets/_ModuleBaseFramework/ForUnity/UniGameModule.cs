@@ -14,13 +14,14 @@ namespace ModuleBased.ForUnity
 
 
         public IEnumerator InitializeModule(IProgress<ProgressInfo> progress)
-        {   
+        {
             var e = OnInitializingModule(progress);
             while (e.MoveNext())
             {
-                yield return null;
+                yield return e.Current;
             }
-            progress.Report(1, GetType().Name);
+            //progress.Report(1, GetType().Name);
+            yield return null;
         }
 
         public void StartModule()
