@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86a23a268b3663b43b732bb3fc3488a8, type: 3}
+  m_Name: DevConfig
+  m_EditorClassIdentifier: 
+  m_records:
+  - Key: dialog_auto_play
+    Type: 0
+    Value: True
+  - Key: dialog_auto_play_delay
+    Type: 2
+    Value: 1
+  - Key: dialog_play_speed
+    Type: 2
+    Value: 100
+  - Key: dialog_enable_skip
+    Type: 0
+    Value: False
+  - Key: dialog_skip_speed
+    Type: 2
+    Value: 100

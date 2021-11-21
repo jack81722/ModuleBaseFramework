@@ -15,7 +15,14 @@ namespace ModuleBased.Example.Dialog
         private ChatBoxPool _pool;
 
         private string _targetText;
-        private string _currentText;
+        private string _currentText {
+            get
+            {
+                if (_txtChat != null)
+                    return _txtChat.text;
+                return string.Empty;
+            }
+        }
 
         [SerializeField]
         private Text _txtChat;
@@ -40,17 +47,24 @@ namespace ModuleBased.Example.Dialog
         {
             Hide();
             _pool.Push(this);
-            if (IsAlive())
-            {
-                _tween.Kill();
-            }
+            killTween();
         }
 
         public void PlayChat(string text, float speed)
         {
             _txtChat.text = "";
+            _targetText = text;
             _tween = _txtChat
-                .DOText(text, text.Length / speed)
+                .DOText(_targetText, _targetText.Length / speed)
+                .SetEase(Ease.Linear)
+                .SetAutoKill(false);
+        }
+
+        public void ModifySpeed(float speed)
+        {
+            killTween();
+            _tween = _txtChat
+                .DOText(_targetText, _targetText.Length / speed)
                 .SetEase(Ease.Linear)
                 .SetAutoKill(false);
         }
@@ -85,7 +99,14 @@ namespace ModuleBased.Example.Dialog
             {
                 _tween.Complete();
             }
-            
+        }
+
+        private void killTween()
+        {
+            if (IsAlive())
+            {
+                _tween.Kill();
+            }
         }
     }
 }

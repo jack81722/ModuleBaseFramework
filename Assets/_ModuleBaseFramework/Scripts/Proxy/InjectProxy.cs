@@ -1,4 +1,5 @@
 using ModuleBased.Injection;
+using ModuleBased.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -15,16 +16,15 @@ namespace ModuleBased.Proxy
         public InjectProxy(object real) : base(real)
         {
             _injectMethods = new Dictionary<MethodInfo, _InjectMethod>();
-            analyzeInjectMethod();
         }
 
         private void analyzeInjectMethod()
         {
-            var type= GetRoot().GetType();
+            var type = GetRoot().GetType();
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
-            foreach(var method in methods)
+            foreach (var method in methods)
             {
-                if (method.IsDefined(typeof(InjectAttribute)))
+                if (method.GetParameters().ExistsAttr<ParameterInfo, InjectAttribute>(true))
                 {
                     _injectMethods.Add(method, new _InjectMethod(core, method));
                 }
@@ -33,21 +33,11 @@ namespace ModuleBased.Proxy
 
         protected object[] modifyInjectableArgs(MethodInfo method, object[] args)
         {
-            if (method.IsDefined(typeof(InjectAttribute)))
+
+            if(_injectMethods.TryGetValue(method, out _InjectMethod m))
             {
-                var modifiedArgs = new object[args.Length];
-                var paramList = method.GetParameters();
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (paramList[i].IsDefined(typeof(InjectAttribute)))
-                    {
-                        var attr = paramList[i].GetCustomAttribute<InjectAttribute>();
-                        modifiedArgs[i] = core.Get(paramList[i].ParameterType, attr.Identity);
-                        continue;
-                    }
-                    modifiedArgs[i] = args[i];
-                }
-                return modifiedArgs;
+                var injected = m.ModifyInjectableArgs(args);
+                return injected;
             }
             return args;
         }
@@ -55,6 +45,7 @@ namespace ModuleBased.Proxy
         public void OnInject()
         {
             core.Inject(GetInner());
+            analyzeInjectMethod();
         }
 
         private class _InjectMethod
@@ -74,7 +65,7 @@ namespace ModuleBased.Proxy
                 var ps = _methodInfo.GetParameters();
                 _paramAttrs = new InjectAttribute[ps.Length];
                 int i = 0;
-                foreach(var p in ps)
+                foreach (var p in ps)
                 {
                     if (p.IsDefined(typeof(InjectAttribute)))
                     {
@@ -87,7 +78,7 @@ namespace ModuleBased.Proxy
                 }
             }
 
-            private object[] modifyInjectableArgs(object[] args)
+            public object[] ModifyInjectableArgs(object[] args)
             {
                 var modifiedArgs = new object[args.Length];
                 var paramList = _methodInfo.GetParameters();
@@ -95,7 +86,7 @@ namespace ModuleBased.Proxy
                 {
                     var attr = _paramAttrs[i];
                     if (attr != null)
-                    {   
+                    {
                         modifiedArgs[i] = _core.Get(paramList[i].ParameterType, attr.Identity);
                     }
                     else

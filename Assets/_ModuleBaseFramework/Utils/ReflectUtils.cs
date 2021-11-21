@@ -28,7 +28,12 @@ namespace ModuleBased.Utils
             return type.GetMethods(flags);
         }
 
-        public static IEnumerable<TSource> WhereAttr<TSource, TAttr>(this IEnumerable<TSource> sources, bool inherit)
+        public static bool ExistsAttr<TSource, TAttr>(this IEnumerable<TSource> sources, bool inherit) where TSource : ICustomAttributeProvider where TAttr : Attribute
+        {
+            return sources.Any((s) => s.IsDefined(typeof(TAttr), inherit));
+        }
+
+        public static IEnumerable<TSource> WhereAttr<TSource, TAttr>(this IEnumerable<TSource> sources, bool inherit) where TAttr : Attribute
         {
             List<TSource> list = new List<TSource>();
             foreach (var source in sources)
@@ -49,7 +54,7 @@ namespace ModuleBased.Utils
             });
         }
 
-        public static IEnumerable<MemberInfo> WhereAttr<T>(this IEnumerable<MemberInfo> members, bool inherit)
+        public static IEnumerable<MemberInfo> WhereAttr<T>(this IEnumerable<MemberInfo> members, bool inherit) where T : Attribute
         {
             return members.WhereAttr(typeof(T), inherit);
         }
@@ -75,7 +80,7 @@ namespace ModuleBased.Utils
             });
         }
 
-        public static IEnumerable<PropertyInfo> WhereAttr<T>(this IEnumerable<PropertyInfo> props, bool inherit)
+        public static IEnumerable<PropertyInfo> WhereAttr<T>(this IEnumerable<PropertyInfo> props, bool inherit) where T : Attribute
         {
             return props.WhereAttr(typeof(T), inherit);
         }
@@ -88,7 +93,7 @@ namespace ModuleBased.Utils
             });
         }
 
-        public static IEnumerable<MethodInfo> WhereAttr<T>(this IEnumerable<MethodInfo> methods, bool inherit)
+        public static IEnumerable<MethodInfo> WhereAttr<T>(this IEnumerable<MethodInfo> methods, bool inherit) where T : Attribute
         {
             return methods.WhereAttr(typeof(T), inherit);
         }
@@ -111,7 +116,7 @@ namespace ModuleBased.Utils
             return list;
         }
 
-        public static IEnumerable<KeyValuePair<TSource, TAttr>> WithAttr<TSource, TAttr>(this IEnumerable<TSource> sources, bool inherit)
+        public static IEnumerable<KeyValuePair<TSource, TAttr>> WithAttr<TSource, TAttr>(this IEnumerable<TSource> sources, bool inherit) where TAttr : Attribute
         {
             List<KeyValuePair<TSource, TAttr>> list = new List<KeyValuePair<TSource, TAttr>>();
             foreach (var source in sources)

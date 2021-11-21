@@ -59,7 +59,7 @@ namespace ModuleBased.ForUnity
 
             // search all injectable in children
             SearchAndSetup(FindObjectsOfType<MonoBehaviour>());
-            SceneManager.sceneLoaded += LoadSceneAndSetup2;
+            SceneManager.sceneLoaded += LoadSceneAndSetup;
             SceneManager.sceneUnloaded += UnloadSceneAndSetup;
         }
 
@@ -114,79 +114,6 @@ namespace ModuleBased.ForUnity
         }
 
         private void LoadSceneAndSetup(Scene scene, LoadSceneMode mode)
-        {
-            var list = new List<KeyValuePair<Type, object>>();
-            _injectableList.Add(scene, list);
-            var monos = scene.GetRootGameObjects()
-                .Deverge((go) => go.GetComponentsInChildren<MonoBehaviour>());
-            var singletons = new List<object>();
-            foreach (var mono in monos)
-            {
-                var monoType = mono.GetType();
-                // injectable
-                if (monoType.IsDefined(typeof(InjectableAttribute), false))
-                {
-                    var attrs = monoType.GetCustomAttributes<InjectableAttribute>();
-                    foreach (var attr in attrs)
-                    {
-                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
-                            continue;
-                        contraction
-                            .SetScope(attr.ContractScope)
-                            .Concrete(monoType, mono);
-                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
-                        {
-                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
-                            foreach (var proxyAttr in proxyAttrs)
-                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
-                        }
-                        list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
-                        if(attr.ContractScope == EContractScope.Singleton)
-                        {
-                            singletons.Add(contraction.Instantiate());
-                        }
-                    }
-                }
-
-                if (monoType.IsDefined(typeof(InjectableFactoryAttribute), true))
-                {
-                    var attrs = monoType.GetCustomAttributes<InjectableFactoryAttribute>();
-                    foreach (var attr in attrs)
-                    {
-                        if (!typeof(IFactory).IsAssignableFrom(monoType))
-                        {
-                            throw new InvalidCastException($"The {monoType.Name} is not implemented factory.");
-                        }
-
-                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
-                            continue;
-                        contraction
-                            .SetScope(attr.ContractScope)
-                            .FromFactory((IFactory)mono);
-                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
-                        {
-                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
-                            foreach (var proxyAttr in proxyAttrs)
-                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
-                        }
-                        list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
-                        if (attr.ContractScope == EContractScope.Singleton)
-                        {
-                            singletons.Add(contraction.Instantiate());
-                        }
-                    }
-                }
-
-                
-            }
-
-            foreach (var singleton in singletons)
-            {
-                _core.Inject(singleton);
-            }
-        }
-
-        private void LoadSceneAndSetup2(Scene scene, LoadSceneMode mode)
         {
             var list = new List<Contraction>();
             var monos = scene.GetRootGameObjects()

@@ -56,19 +56,6 @@ namespace ModuleBased
             }
             yield return null;
 
-            //var mods = instances.WhereAs<IGameModule>();
-            //foreach (var mod in mods)
-            //{
-            //    var enumerator = mod.InitializeModule(null);
-            //    while (enumerator.MoveNext())
-            //    {
-            //        yield return null;
-            //    }
-            //}
-            //foreach (var mod in mods)
-            //{
-            //    mod.StartModule();
-            //}
         }
 
         public void Initialize(IEnumerable<Contraction> contractions)
@@ -120,12 +107,19 @@ namespace ModuleBased
                 }).
                 IfMethodThen(methodInfo =>
                 {
-                    //var contraction = _container.FindContract(methodInfo.GetParameters()[0].ParameterType);
-                    //if (contraction == null)
-                    //{
-                    //    UnityEngine.Debug.LogError(methodInfo.GetParameters()[0].ParameterType.Name);
-                    //}
-                    //methodInfo.Invoke(target, new object[] { contraction.Instantiate() });
+                    var ps = methodInfo.GetParameters();
+                    var args = new object[ps.Length];
+                    int i = 0;
+                    foreach (var p in ps)
+                    {
+                        var contraction = _container.FindContract(p.ParameterType);
+                        if (contraction == null)
+                        {
+                            UnityEngine.Debug.LogError(p.ParameterType.Name);
+                        }
+                        args[i++] = contraction.Instantiate();
+                    }
+                    methodInfo.Invoke(target, args);
                 });
             (target as IEventInject)?.OnInject();
         }

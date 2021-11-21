@@ -812,9 +812,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15782395f8a5e7b40b2d8eb3c4311afe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StringRowList:
-  - Key: chapter
-    Value: sample
-  FloatRowList: []
-  IntRowList: []
-  ObjectRowList: []
+  _configs: {fileID: 11400000, guid: 06509ad862a2bd341a0b8e8a2853a28e, type: 2}

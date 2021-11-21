@@ -22,6 +22,7 @@ namespace ModuleBased.Example
         [Inject]
         private void Init(IConfigModule configMod)
         {
+            Debug.Log("Option init");
             _configMod = configMod;
             
             _configMod.TryCreate("slider", 0.5f);

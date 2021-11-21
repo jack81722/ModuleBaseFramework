@@ -1,9 +1,7 @@
 using ModuleBased.ForUnity;
 using ModuleBased.Injection;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using UnityEngine;
 
 namespace ModuleBased.Example
@@ -12,33 +10,31 @@ namespace ModuleBased.Example
     public class ConfigModuleFactory : MonoBehaviour, IFactory
     {
         [SerializeField]
-        List<ConfigStringRow> StringRowList;
-        [SerializeField]
-        List<ConfigFloatRow> FloatRowList;
-        [SerializeField]
-        List<ConfigIntRow> IntRowList;
-        [SerializeField]
-        List<ConfigObjectRow> ObjectRowList;
-        [SerializeField]
-        List<ConfigBoolRow> BoolRowList;
+        private ConfigScriptableObject _configs;
 
         public object Create(object args)
         {
+            var config = Instantiate(_configs);
             var configMod = new ConfigModule();
-            AddCustomConfig(configMod, StringRowList);
-            AddCustomConfig(configMod, FloatRowList);
-            AddCustomConfig(configMod, IntRowList);
-            AddCustomConfig(configMod, ObjectRowList);
-            AddCustomConfig(configMod, BoolRowList);
-            return configMod;
-        }
-
-        private void AddCustomConfig<T>(IConfigModule configMod, IEnumerable<ConfigRow<T>> rows)
-        {
-            foreach (var row in rows)
+            foreach(var record in config.Records)
             {
-                configMod.Create(row.Key, row.Value);
+                switch (record.Type) 
+                {
+                    case Record.TypeEnum.Bool:
+                        configMod.Save(record.Key, (bool)record);
+                        break;
+                    case Record.TypeEnum.Float:
+                        configMod.Save(record.Key, (float)record);
+                        break;
+                    case Record.TypeEnum.Int:
+                        configMod.Save(record.Key, (int)record);
+                        break;
+                    case Record.TypeEnum.String:
+                        configMod.Save(record.Key, (string)record);
+                        break;
+                }
             }
+            return configMod;
         }
 
         private class ConfigModule : IConfigModule
@@ -123,6 +119,17 @@ namespace ModuleBased.Example
                 binding.Invoke(LoadOrDefault(key));
             }
 
+            public void Unsubscribe<T>(string key, Action<T> onChanged)
+            {
+                var binding = SubjectBinding.NewBinding(key, onChanged);
+                if (!_bindings.TryGetValue(key, out List<SubjectBinding> list))
+                {
+                    list = new List<SubjectBinding>();
+                    _bindings.Add(key, list);
+                }
+                list.Remove(binding);
+            }
+
             private void Invoke(string key, object value)
             {
                 if (!_bindings.TryGetValue(key, out List<SubjectBinding> list))
@@ -183,6 +190,8 @@ namespace ModuleBased.Example
         bool ContainsKey(string key);
 
         void Subcribe<T>(string key, Action<T> onChanged);
+
+        void Unsubscribe<T>(string key, Action<T> onChanged);
     }
 
     public static class ConfigExtension
