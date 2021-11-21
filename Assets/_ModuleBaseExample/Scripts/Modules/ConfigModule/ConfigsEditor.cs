@@ -9,6 +9,8 @@ namespace ModuleBased.Example
     [CustomEditor(typeof(ConfigScriptableObject))]
     public class ConfigsEditor : Editor
     {
+        private static float _lockToggleWidth = 15f;
+
         private static readonly float SaveDelay = 2.0f;
         private float m_lastDirtyTime = -1.0f;
 
@@ -45,18 +47,26 @@ namespace ModuleBased.Example
             list.drawElementCallback = (rect, index, active, focus) => DrawListItems(list, rect, index, active, focus); // Delegate to draw the elements on the list
             list.elementHeightCallback = (index) => ElementHeight(list, index);
             list.drawHeaderCallback = DrawHeader;
-            list.onAddDropdownCallback = (Rect buttonRect, ReorderableList l) => {
-                var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("A"), false, clickHandler);
-                
-                menu.ShowAsContext();
+            list.onRemoveCallback = (list) =>
+            {
+                var listProp = list.serializedProperty;
+                var element = listProp.GetArrayElementAtIndex(list.index);
+                if (element.FindPropertyRelative("Lock").boolValue)
+                    return;
+                listProp.DeleteArrayElementAtIndex(list.index);
             };
+            //list.onAddDropdownCallback = (Rect buttonRect, ReorderableList l) => {
+            //    var menu = new GenericMenu();
+            //    menu.AddItem(new GUIContent("A"), false, clickHandler);
+
+            //    menu.ShowAsContext();
+            //};
             return list;
         }
 
         private void clickHandler()
         {
-            
+
         }
 
         private void OnEnable()
@@ -82,8 +92,8 @@ namespace ModuleBased.Example
 
         void DrawListItems(ReorderableList list, Rect rect, int index, bool isActive, bool isFocused)
         {
-
             SerializedProperty element = list.serializedProperty.GetArrayElementAtIndex(index); // The element in the list
+            var lockProp = element.FindPropertyRelative("Lock");
             var keyProp = element.FindPropertyRelative("Key");
             if (!keyProp.stringValue.Contains(_filter))
                 return;
@@ -102,14 +112,21 @@ namespace ModuleBased.Example
             {
                 GUI.backgroundColor = Color.red;
             }
+            GUI.enabled = !lockProp.boolValue;
             keyProp.stringValue = EditorGUI.TextField(
-                new Rect(rect.x, rect.y, rect.width, EditorGUIUtility.singleLineHeight),
+                new Rect(rect.x, rect.y, rect.width - _lockToggleWidth - 10, EditorGUIUtility.singleLineHeight),
                 keyProp.stringValue);
             if (collide)
             {
                 GUI.backgroundColor = Color.red;
                 GUI.backgroundColor = origin;
             }
+            GUI.enabled = true;
+            lockProp.boolValue = EditorGUI.Toggle(
+                new Rect(rect.x + rect.width - _lockToggleWidth, rect.y, _lockToggleWidth, EditorGUIUtility.singleLineHeight),
+                lockProp.boolValue);
+            GUI.enabled = !lockProp.boolValue;
+
             float secondaryRowTypeWidth = 110;
             float secondaryRowValueWidth = rect.width - secondaryRowTypeWidth;
             float secondaryRowY = rect.y + EditorGUIUtility.standardVerticalSpacing + EditorGUIUtility.singleLineHeight;
@@ -151,6 +168,7 @@ namespace ModuleBased.Example
                         valueProp.stringValue);
                     break;
             }
+            GUI.enabled = true;
         }
 
         //Draws the header
@@ -163,13 +181,36 @@ namespace ModuleBased.Example
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+            GUILayout.BeginVertical("groupbox");
+            GUILayout.BeginHorizontal();
+            var origin = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = 50;
             var filter = EditorGUILayout.TextField("Filter", _filter);
+            EditorGUIUtility.labelWidth = origin;
+            if (GUILayout.Button("Lock All"))
+            {
+                var records = serializedObject.FindProperty("m_records");
+                for (int i = 0; i < records.arraySize; i++)
+                {
+                    var element = records.GetArrayElementAtIndex(i);
+                    element.FindPropertyRelative("Lock").boolValue = true;
+                }
+            }
+            if (GUILayout.Button("Unlock All"))
+            {
+                var records = serializedObject.FindProperty("m_records");
+                for (int i = 0; i < records.arraySize; i++)
+                {
+                    var element = records.GetArrayElementAtIndex(i);
+                    element.FindPropertyRelative("Lock").boolValue = false;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
             bool filterChanged = filter != _filter;
             if (_list == null || filterChanged)
             {
                 _filter = filter;
-                var records = serializedObject.FindProperty("m_records");
-                int size = records.arraySize;
                 _list = CreateReorderableList();
             }
             _list.DoLayoutList();

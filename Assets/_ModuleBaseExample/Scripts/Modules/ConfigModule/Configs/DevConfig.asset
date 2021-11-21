@@ -14,17 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_records:
   - Key: dialog_auto_play
+    Lock: 1
     Type: 0
     Value: True
   - Key: dialog_auto_play_delay
+    Lock: 1
     Type: 2
     Value: 1
   - Key: dialog_play_speed
+    Lock: 1
     Type: 2
-    Value: 100
+    Value: 20
   - Key: dialog_enable_skip
+    Lock: 1
     Type: 0
     Value: False
   - Key: dialog_skip_speed
+    Lock: 1
     Type: 2
     Value: 100

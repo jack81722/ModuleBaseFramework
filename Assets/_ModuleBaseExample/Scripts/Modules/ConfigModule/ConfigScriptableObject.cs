@@ -204,6 +204,7 @@ public class Record
     }
 
     public string Key = "";
+    public bool Lock = false;
     public TypeEnum Type = TypeEnum.Bool;
     public string Value = "";
 
