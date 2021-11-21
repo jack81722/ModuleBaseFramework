@@ -189,15 +189,23 @@ namespace ModuleBased.Injection
         internal IFactory Factory;
         internal object[] Args;
         internal IDisposable Disposable;
+        private bool _isWrapped;
+        internal List<Type> InterceptorTypes = new List<Type>();
 
         #region -- Dirty pattern
-        private bool _isDirty;
+        private bool _isDirty = true;
 
         public bool IsDirty()
         {
-            return _isDirty;
+            var dirty = _isDirty;
+            return dirty;
         }
 
+
+        public void ResetDirty()
+        {
+            _isDirty = false;
+        }
         #endregion
 
         public Contraction()
@@ -205,7 +213,7 @@ namespace ModuleBased.Injection
             _isDirty = true;
         }
 
-        public object Instantiate()
+        private object instantiate()
         {
             if (ContractScope == EContractScope.Singleton)
             {
@@ -219,6 +227,7 @@ namespace ModuleBased.Injection
             if (ContractScope == EContractScope.Transient)
             {
                 var concrete = Spawn();
+                _isWrapped = false;
                 Disposable = concrete as IDisposable;
                 return concrete;
             }
@@ -230,6 +239,26 @@ namespace ModuleBased.Injection
             }
             _isDirty = true;
             return ConcreteInstance;
+        }
+
+        private object wrapInterceptor(object concrete)
+        {
+            if (_isWrapped)
+                return concrete;
+            object wrapped = concrete;
+            foreach (var interceptorType in InterceptorTypes)
+            {
+                wrapped = Activator.CreateInstance(interceptorType, wrapped);
+            }
+            ConcreteInstance = wrapped;
+            _isWrapped = true;
+            return wrapped;
+        }
+
+        public object Instantiate()
+        {
+            var concrete = wrapInterceptor(instantiate());
+            return concrete;
         }
 
 

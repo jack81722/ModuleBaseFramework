@@ -1,5 +1,6 @@
 ﻿using ModuleBased.DAO;
 using ModuleBased.Injection;
+using ModuleBased.Proxy;
 using ModuleBased.Utils;
 using System;
 using System.Collections.Generic;
@@ -58,7 +59,7 @@ namespace ModuleBased.ForUnity
 
             // search all injectable in children
             SearchAndSetup(FindObjectsOfType<MonoBehaviour>());
-            SceneManager.sceneLoaded += LoadSceneAndSetup;
+            SceneManager.sceneLoaded += LoadSceneAndSetup2;
             SceneManager.sceneUnloaded += UnloadSceneAndSetup;
         }
 
@@ -78,6 +79,12 @@ namespace ModuleBased.ForUnity
                         contraction
                             .SetScope(attr.ContractScope)
                             .Concrete(monoType, mono);
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
                     }
                 }
 
@@ -95,7 +102,12 @@ namespace ModuleBased.ForUnity
                         contraction
                             .SetScope(attr.ContractScope)
                             .FromFactory((IFactory)mono);
-                       
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
                     }
                 }
             }
@@ -122,6 +134,12 @@ namespace ModuleBased.ForUnity
                         contraction
                             .SetScope(attr.ContractScope)
                             .Concrete(monoType, mono);
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
                         list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
                         if(attr.ContractScope == EContractScope.Singleton)
                         {
@@ -145,6 +163,12 @@ namespace ModuleBased.ForUnity
                         contraction
                             .SetScope(attr.ContractScope)
                             .FromFactory((IFactory)mono);
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
                         list.Add(new KeyValuePair<Type, object>(attr.ContractType, attr.Identity));
                         if (attr.ContractScope == EContractScope.Singleton)
                         {
@@ -152,12 +176,73 @@ namespace ModuleBased.ForUnity
                         }
                     }
                 }
+
+                
             }
 
             foreach (var singleton in singletons)
             {
                 _core.Inject(singleton);
             }
+        }
+
+        private void LoadSceneAndSetup2(Scene scene, LoadSceneMode mode)
+        {
+            var list = new List<Contraction>();
+            var monos = scene.GetRootGameObjects()
+                .Deverge((go) => go.GetComponentsInChildren<MonoBehaviour>());
+
+            foreach (var mono in monos)
+            {
+                var monoType = mono.GetType();
+                // injectable
+                if (monoType.IsDefined(typeof(InjectableAttribute), false))
+                {
+                    var attrs = monoType.GetCustomAttributes<InjectableAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .Concrete(monoType, mono);
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
+                        list.Add(contraction);
+                    }
+                }
+
+                if (monoType.IsDefined(typeof(InjectableFactoryAttribute), true))
+                {
+                    var attrs = monoType.GetCustomAttributes<InjectableFactoryAttribute>();
+                    foreach (var attr in attrs)
+                    {
+                        if (!typeof(IFactory).IsAssignableFrom(monoType))
+                        {
+                            throw new InvalidCastException($"The {monoType.Name} is not implemented factory.");
+                        }
+
+                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
+                            continue;
+                        contraction
+                            .SetScope(attr.ContractScope)
+                            .FromFactory((IFactory)mono);
+                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
+                        {
+                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
+                            foreach (var proxyAttr in proxyAttrs)
+                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
+                        }
+                        list.Add(contraction);
+                    }
+                }
+            }
+
+            _core.Initialize(list);
         }
 
         private void UnloadSceneAndSetup(Scene scene)

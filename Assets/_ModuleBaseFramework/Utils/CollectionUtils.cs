@@ -12,11 +12,15 @@ namespace ModuleBased.Utils
             StringBuilder builder = new StringBuilder();
             var enumerator = list.GetEnumerator();
             if (enumerator.MoveNext())
-                builder.Append(enumerator.Current.ToString());
+            {
+                if (enumerator.Current != null)
+                    builder.Append(enumerator.Current.ToString());
+            }
             while (enumerator.MoveNext())
             {
                 builder.Append(sep);
-                builder.Append(enumerator.Current.ToString());
+                if (enumerator.Current != null)
+                    builder.Append(enumerator.Current.ToString());
             }
             return builder.ToString();
         }
@@ -26,11 +30,15 @@ namespace ModuleBased.Utils
             StringBuilder builder = new StringBuilder();
             var enumerator = list.GetEnumerator();
             if (enumerator.MoveNext())
-                builder.Append(enumerator.Current.ToString());
+            {
+                if(enumerator.Current != null)
+                    builder.Append(enumerator.Current.ToString());
+            }
             while (enumerator.MoveNext())
             {
-                builder.Append(sep);
-                builder.Append(enumerator.Current.ToString());
+                builder.Append(sep); 
+                if (enumerator.Current != null)
+                    builder.Append(enumerator.Current.ToString());
             }
             return builder.ToString();
         }

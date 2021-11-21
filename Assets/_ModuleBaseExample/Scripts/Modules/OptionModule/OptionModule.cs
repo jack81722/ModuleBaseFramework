@@ -9,17 +9,12 @@ using UnityEngine.SceneManagement;
 namespace ModuleBased.Example
 {
     [Injectable(typeof(OptionModule))]
-    public class OptionModule : UniGameModule
+    public class OptionModule : UniGameModule, IEventInject
     {
-
-        protected override IEnumerator OnInitializingModule(IProgress<ProgressInfo> progress)
+        public void OnInject()
         {
-            var asyncOp =  SceneManager.LoadSceneAsync("Option", LoadSceneMode.Additive);
-            asyncOp.completed += (op) =>
-            {
-
-            };
-            yield return null;
+            var asyncOp = SceneManager.LoadSceneAsync("Option", LoadSceneMode.Additive);
         }
+
     }
 }

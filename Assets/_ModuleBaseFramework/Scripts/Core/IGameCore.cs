@@ -10,7 +10,8 @@ namespace ModuleBased
     {
         void Launch(IFsmState<IGameCore> state = null);
 
-        IEnumerator Initialize();
+        IEnumerator InitializeAll();
+        void Initialize(IEnumerable<Contraction> contractions);
 
         Contraction Add(Type contractType, object identity = null);
 

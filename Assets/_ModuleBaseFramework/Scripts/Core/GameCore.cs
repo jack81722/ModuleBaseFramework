@@ -32,7 +32,7 @@ namespace ModuleBased
             _fsm.Start(state);
         }
 
-        public IEnumerator Initialize()
+        public IEnumerator InitializeAll()
         {
             List<object> instances = new List<object>();
             foreach (var contraction in _container)
@@ -41,7 +41,6 @@ namespace ModuleBased
                 {
                     var instance = contraction.Instantiate();
                     instances.Add(instance);
-                    UnityEngine.Debug.Log($"contraction{contraction.ContractType} is null? {instance == null}");
                 }
             }
             foreach (var instance in instances)
@@ -55,20 +54,44 @@ namespace ModuleBased
                     UnityEngine.Debug.LogError(e);
                 }
             }
+            yield return null;
 
+            //var mods = instances.WhereAs<IGameModule>();
+            //foreach (var mod in mods)
+            //{
+            //    var enumerator = mod.InitializeModule(null);
+            //    while (enumerator.MoveNext())
+            //    {
+            //        yield return null;
+            //    }
+            //}
+            //foreach (var mod in mods)
+            //{
+            //    mod.StartModule();
+            //}
+        }
 
-            var mods = instances.WhereAs<IGameModule>();
-            foreach (var mod in mods)
+        public void Initialize(IEnumerable<Contraction> contractions)
+        {
+            List<object> instances = new List<object>();
+            foreach (var contraction in contractions)
             {
-                var enumerator = mod.InitializeModule(null);
-                while (enumerator.MoveNext())
+                if (contraction.ContractScope == EContractScope.Singleton)
                 {
-                    yield return null;
+                    var instance = contraction.Instantiate();
+                    instances.Add(instance);
                 }
             }
-            foreach (var mod in mods)
+            foreach (var instance in instances)
             {
-                mod.StartModule();
+                try
+                {
+                    Inject(instance);
+                }
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.LogError(e);
+                }
             }
         }
 
@@ -97,13 +120,14 @@ namespace ModuleBased
                 }).
                 IfMethodThen(methodInfo =>
                 {
-                    var contraction = _container.FindContract(methodInfo.GetParameters()[0].ParameterType);
-                    if (contraction == null)
-                    {
-                        UnityEngine.Debug.LogError(methodInfo.GetParameters()[0].ParameterType.Name);
-                    }
-                    methodInfo.Invoke(target, new object[] { contraction.Instantiate() });
+                    //var contraction = _container.FindContract(methodInfo.GetParameters()[0].ParameterType);
+                    //if (contraction == null)
+                    //{
+                    //    UnityEngine.Debug.LogError(methodInfo.GetParameters()[0].ParameterType.Name);
+                    //}
+                    //methodInfo.Invoke(target, new object[] { contraction.Instantiate() });
                 });
+            (target as IEventInject)?.OnInject();
         }
 
         public Contraction Add(Type contractType, object identity = null)
@@ -125,6 +149,7 @@ namespace ModuleBased
             }
             object concrete;
             bool isDirty = contraction.IsDirty();
+            contraction.ResetDirty();
             switch (contraction.ContractScope)
             {
                 case EContractScope.Singleton:
@@ -419,7 +444,7 @@ namespace ModuleBased
         public override void OnEnter(IFsm<IGameCore> fsm)
         {
             MainThreadDispatcher.SendStartCoroutine(
-                fsm.Target.Initialize(),
+                fsm.Target.InitializeAll(),
                 () => OnCompletedInitialize(fsm),
                 fsm.OnError);
         }
@@ -438,5 +463,10 @@ namespace ModuleBased
         {
             UnityEngine.Debug.Log("Default state!");
         }
+    }
+
+    public interface IEventInject
+    {
+        void OnInject();
     }
 }

@@ -6,13 +6,23 @@ using System.Runtime.Remoting.Proxies;
 
 namespace ModuleBased.Proxy
 {
-    public abstract class ProxyBase : RealProxy
+    public abstract class ProxyBase : RealProxy, IProxy, IDisposable
     {
-        protected object realObj;
+        private object _innerObj;
+        private object _rootObj;
 
-        public ProxyBase(object real)
+        public ProxyBase(Type targetType, object inner) : base(targetType)
         {
-            realObj = real;
+            _innerObj = inner;
+            var proxy = inner as IProxy;
+            if (proxy != null)
+            {
+                _rootObj = proxy.GetRoot();
+            }
+            else
+            {
+                _rootObj = inner;
+            }
         }
 
         public override IMessage Invoke(IMessage msg)
@@ -21,9 +31,8 @@ namespace ModuleBased.Proxy
             MethodInfo targetMethod = callMethod.MethodBase as MethodInfo;
             try
             {
-                var result = targetMethod.Invoke(realObj, callMethod.Args);
+                var result = targetMethod.Invoke(_innerObj, callMethod.Args);
                 return new ReturnMessage(result, null, 0, callMethod.LogicalCallContext, callMethod);
-
             }
             catch (Exception e)
             {
@@ -34,7 +43,7 @@ namespace ModuleBased.Proxy
         protected virtual object InvokeProxyMethod(params object[] args)
         {
             var method = GetMethod(2);
-            var result = method.Invoke(realObj, args);
+            var result = method.Invoke(_innerObj, args);
             return result;
         }
 
@@ -42,21 +51,54 @@ namespace ModuleBased.Proxy
         {
             StackTrace trace = new StackTrace();
             var frames = trace.GetFrames();
-            var method = realObj.GetType().GetMethod(frames[frame].GetMethod().Name);
+            var method = _innerObj.GetType().GetMethod(frames[frame].GetMethod().Name);
             return method;
+        }
+        
+        public object GetInner()
+        {
+            return _innerObj;
+        }
+
+        public object GetRoot()
+        {
+            return _rootObj;
+        }
+
+        public void Dispose()
+        {
+            (_innerObj as IDisposable)?.Dispose();
         }
     }
 
     public abstract class ProxyBase<T> : ProxyBase where T : class
     {
-        protected T RealObj => (T)realObj;
 
-        public ProxyBase(object real) : base(real)
+        public ProxyBase(object real) : base(typeof(T), real)
         {
-            if (real.GetType() != typeof(T))
-                throw new ArgumentException("Not the instance of the specific type.");
+            Type assertType = typeof(T);
+            Type realType = real.GetType();
+            if (realType != assertType &&
+                realType.IsSubclassOf(assertType) &&
+                assertType.IsAssignableFrom(realType))
+                throw new ArgumentException($"Not the instance of the specific type ({typeof(T).Name}).");
         }
 
-        public ProxyBase(T real) : base(real) { }
+        public ProxyBase(T real) : base(typeof(T), real) 
+        {
+            Type assertType = typeof(T);
+            Type realType = real.GetType();
+            if (realType != assertType &&
+                realType.IsSubclassOf(assertType) &&
+                assertType.IsAssignableFrom(realType))
+                throw new ArgumentException($"Not the instance of the specific type ({typeof(T).Name}).");
+        }
+    }
+
+    public interface IProxy
+    {
+        object GetInner();
+
+        object GetRoot();
     }
 }

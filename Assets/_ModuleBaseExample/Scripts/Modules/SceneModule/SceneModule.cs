@@ -13,14 +13,9 @@ namespace ModuleBased.Example.Scenes
     [Injectable(typeof(ISceneModule))]
     public class SceneModule : UniGameModule, ISceneModule
     {
-        private HashSet<string> _loadedScenes;
+        private HashSet<string> _loadedScenes = new HashSet<string>();
         public Scene[] LoadingScenes;
 
-        protected override IEnumerator OnInitializingModule(IProgress<ProgressInfo> progress)
-        {
-            _loadedScenes = new HashSet<string>();
-            yield return null;
-        }
 
         public IObservable<Scene> LoadScene(string sceneName)
         {

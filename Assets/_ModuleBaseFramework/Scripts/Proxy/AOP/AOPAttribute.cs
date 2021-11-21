@@ -16,5 +16,4 @@ namespace ModuleBased.Proxy.AOP
             HandlerType = handlerType;
         }
     }
-
 }

@@ -1,14 +1,21 @@
 using ModuleBased.ForUnity;
 using ModuleBased.Injection;
+using ModuleBased.Proxy;
+using ModuleBased.Proxy.AOP;
+using ModuleBased.Proxy.AOP.Handlers;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ModuleBased.Example.Dialog
-{
-    [InjectableFactory(typeof(IDialogModule))]
-    public class DialogModule : MonoBehaviour, IDialogModule, IFactory
+{   
+    [CustomProxy(typeof(DialogModuleProxy))]
+    [Injectable(typeof(IDialogModule))]
+    public class DialogModule : MonoBehaviour, IDialogModule
     {
+        [Inject]
+        private IConfigModule _configMod;
+
         public bool AutoPlay = true;
         public float PlaySpeed = 5f;
 
@@ -22,18 +29,17 @@ namespace ModuleBased.Example.Dialog
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         };
 
-        public object Create(object args)
-        {
-            return new DialogModuleProxy(this);
-        }
 
         public void Pause()
         {
             _chatBox.PauseChat();
         }
 
-        public void Play(ChatBox box = null)
+        [UniLog(EAOPStatus.Before | EAOPStatus.After | EAOPStatus.Error)]
+        [Inject]
+        public void Play([Inject]ChatBox box = null)
         {
+            Debug.Log("Play");
             if (box == null)
                 return;
             _chatBox?.Dispose();
@@ -92,36 +98,25 @@ namespace ModuleBased.Example.Dialog
         }
     }
 
-    public class DialogModuleProxy : IDialogModule
+    public class DialogModuleProxy : AOPProxyBase<IDialogModule>, IDialogModule
     {
-        [Inject]
-        private IGameCore _core;
-        [Inject]
-        private IConfigModule _configMod;
-
-        private IDialogModule _inner;
-
-        public DialogModuleProxy(IDialogModule inner)
+        public DialogModuleProxy(object real) : base(real)
         {
-            _inner = inner;
         }
 
         public void Pause()
         {
-            _inner.Pause();
+            InvokeProxyMethod();
         }
 
         public void Play(ChatBox box = null)
         {
-            var chapterName = _configMod.LoadOrDefault("chapter");
-            Debug.Log(chapterName);
-            var chatBox = _core.Get<ChatBox>();
-            _inner.Play(chatBox);
+            InvokeProxyMethod(box);
         }
 
         public void Stop()
         {
-            _inner.Stop();
+            InvokeProxyMethod();
         }
     }
 
