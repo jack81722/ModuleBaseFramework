@@ -6,6 +6,7 @@ using ModuleBased.Proxy.AOP.Handlers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace ModuleBased.Example.Dialog
@@ -33,6 +34,8 @@ namespace ModuleBased.Example.Dialog
         #region -- Required --
         [Inject]
         private IConfigModule _configMod;
+        [Inject]
+        private DialogRepo _repo;
         #endregion
 
         private ChatBox _chatBox;
@@ -60,6 +63,8 @@ namespace ModuleBased.Example.Dialog
             _configMod.Subcribe<float>(DIALOG_PLAY_SPEED, listen_DialogSpeed);
             _configMod.Subcribe<bool>(DIALOG_ENABLE_SKIP, listen_EnableSkip);
             _configMod.Subcribe<float>(DIALOG_SKIP_SPEED, listen_SkipSpeed);
+
+            
         }
 
         #region -- Events --
@@ -127,9 +132,17 @@ namespace ModuleBased.Example.Dialog
             _chatBox.PauseChat();
         }
 
+        [UniLog(EAOPStatus.Before)]
+        public void Load(string chapterName)
+        {
+            DialogModel model = _repo.GetByChapterName(chapterName);
+            _chatBuff = model.Chats.Select(c => c.Content).ToList();
+        }
+
         [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
         public void Play([Inject] ChatBox box = null)
         {
+            
             if (box == null)
                 return;
             _chatBox?.Dispose();
@@ -217,6 +230,11 @@ namespace ModuleBased.Example.Dialog
         {
         }
 
+        public void Load(string chapterName)
+        {
+            InvokeProxyMethod(chapterName);
+        }
+
         public void Pause()
         {
             InvokeProxyMethod();
@@ -240,6 +258,8 @@ namespace ModuleBased.Example.Dialog
 
     public interface IDialogModule
     {
+        void Load(string chapterName);
+
         void Play(ChatBox box = null);
 
         void Pause();

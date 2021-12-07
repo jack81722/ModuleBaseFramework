@@ -43,6 +43,13 @@ namespace ModuleBased.Utils
             return builder.ToString();
         }
 
+        public static IEnumerable<T> ReverseClone<T>(this IEnumerable<T> list)
+        {
+            List<T> temp = new List<T>(list);
+            temp.Reverse();
+            return temp;
+        }
+
         /// <summary>
         /// Deverge source to much more destination properties
         /// </summary>

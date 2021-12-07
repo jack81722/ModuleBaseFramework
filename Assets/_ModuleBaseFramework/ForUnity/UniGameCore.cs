@@ -37,88 +37,45 @@ namespace ModuleBased.ForUnity
         private IGameCore _core;
 
         public IGameCore Core => _core;
+        private GameCoreFsm _fsm;
 
         private Dictionary<Scene, List<KeyValuePair<Type, object>>> _injectableList;
 
         protected void Awake()
-        {
+        {   
             InitializeCore();
         }
 
         public void InitializeCore()
         {
             _core = new GameCore();
+            _fsm = new GameCoreFsm(_core);
             _injectableList = new Dictionary<Scene, List<KeyValuePair<Type, object>>>();
             Setup();
-            _core.Launch(DefaultState());
+            _fsm.Start(DefaultState());
+            //_core.Launch(DefaultState());
         }
 
         private void Setup()
         {
+            _core.Add<IFsm<IGameCore>>()
+                .AsSingleton()
+                .Concrete(_fsm);
             CustomSetup(_core);
 
             // search all injectable in children
-            SearchAndSetup(FindObjectsOfType<MonoBehaviour>());
             SceneManager.sceneLoaded += LoadSceneAndSetup;
             SceneManager.sceneUnloaded += UnloadSceneAndSetup;
         }
 
-        private void SearchAndSetup(IEnumerable<MonoBehaviour> monos)
-        {
-            foreach(var mono in monos)
-            {
-                var monoType = mono.GetType();
-                // injectable
-                if (monoType.IsDefined(typeof(InjectableAttribute), false))
-                {
-                    var attrs = monoType.GetCustomAttributes<InjectableAttribute>();
-                    foreach (var attr in attrs)
-                    {
-                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
-                            continue;
-                        contraction
-                            .SetScope(attr.ContractScope)
-                            .Concrete(monoType, mono);
-                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
-                        {
-                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
-                            foreach (var proxyAttr in proxyAttrs)
-                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
-                        }
-                    }
-                }
-
-                if (monoType.IsDefined(typeof(InjectableFactoryAttribute), true))
-                {
-                    var attrs = monoType.GetCustomAttributes<InjectableFactoryAttribute>();
-                    foreach (var attr in attrs)
-                    {
-                        if (!typeof(IFactory).IsAssignableFrom(monoType))
-                        {
-                            throw new InvalidCastException($"The {monoType.Name} is not implemented factory.");
-                        }
-                        if (!_core.TryAdd(attr.ContractType, out Contraction contraction, attr.Identity))
-                            continue;
-                        contraction
-                            .SetScope(attr.ContractScope)
-                            .FromFactory((IFactory)mono);
-                        if (monoType.IsDefined(typeof(CustomProxyAttribute)))
-                        {
-                            var proxyAttrs = monoType.GetCustomAttributes<CustomProxyAttribute>();
-                            foreach (var proxyAttr in proxyAttrs)
-                                contraction.WrapCustomProxy(proxyAttr.ProxyType);
-                        }
-                    }
-                }
-            }
-        }
-
         private void LoadSceneAndSetup(Scene scene, LoadSceneMode mode)
         {
+            Debug.Log($"Load scene : {scene.name}");
             var list = new List<Contraction>();
             var monos = scene.GetRootGameObjects()
                 .Deverge((go) => go.GetComponentsInChildren<MonoBehaviour>());
 
+            List<object> injectTargets = new List<object>();
             foreach (var mono in monos)
             {
                 var monoType = mono.GetType();
@@ -167,14 +124,24 @@ namespace ModuleBased.ForUnity
                         list.Add(contraction);
                     }
                 }
+
+                if (monoType.IsDefined(typeof(InjectAttribute), true))
+                {
+                    injectTargets.Add(mono);
+                }
             }
 
             _core.Initialize(list);
+            foreach(var target in injectTargets)
+            {
+                _core.Inject(target);
+            }
+            _core.InvokeLoaded(list);
         }
 
         private void UnloadSceneAndSetup(Scene scene)
         {
-            if(!_injectableList.TryGetValue(scene, out List<KeyValuePair<Type, object>> list))
+            if (!_injectableList.TryGetValue(scene, out List<KeyValuePair<Type, object>> list))
             {
                 return;
             }
@@ -195,7 +162,7 @@ namespace ModuleBased.ForUnity
         }
     }
 
-    
+
 
     /// <summary>
     /// Attribute of injectable monobehaviour

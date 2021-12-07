@@ -15,6 +15,8 @@ namespace ModuleBased
         private Container _container;
         private GameCoreFsm _fsm;
 
+        public event OnLoaded OnLoadedCallback;
+
         public GameCore()
         {
             _fsm = new GameCoreFsm(this);
@@ -22,9 +24,6 @@ namespace ModuleBased
             _container.Contract<IGameCore>()
                 .AsSingleton()
                 .Concrete(this);
-            _container.Contract<IFsm<IGameCore>>()
-                .AsSingleton()
-                .Concrete(_fsm);
         }
 
         public void Launch(IFsmState<IGameCore> state = null)
@@ -163,12 +162,37 @@ namespace ModuleBased
             return concrete;
         }
 
-
         public void Destroy(Type contractType, object identity = null)
         {
             _container.DestroyConcrete(contractType, identity);
         }
 
+        public IEnumerable<Contraction> FindAll(Predicate<Contraction> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException("Predicate is null.");
+            List<Contraction> list = new List<Contraction>();
+            foreach (var contract in _container)
+            {
+                if (predicate.Invoke(contract))
+                {
+                    list.Add(contract);
+                }
+            }
+            return list;
+        }
+
+        public void InvokeLoaded(IEnumerable<Contraction> contractions)
+        {
+            try
+            {
+                OnLoadedCallback?.Invoke(contractions);
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogError(ex);
+            }
+        }
     }
 
     public static class GameCoreExtention

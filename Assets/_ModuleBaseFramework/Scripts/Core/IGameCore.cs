@@ -8,6 +8,8 @@ namespace ModuleBased
 {
     public interface IGameCore
     {
+        event OnLoaded OnLoadedCallback;
+
         void Launch(IFsmState<IGameCore> state = null);
 
         IEnumerator InitializeAll();
@@ -22,6 +24,12 @@ namespace ModuleBased
         void Destroy(Type contractType, object identity = null);
 
         void Inject(object target);
+
+        IEnumerable<Contraction> FindAll(Predicate<Contraction> predicate);
+
+        void InvokeLoaded(IEnumerable<Contraction> contractions);
     }
 
+
+    public delegate void OnLoaded(IEnumerable<Contraction> contractions);
 }

@@ -171,7 +171,7 @@ namespace ModuleBased.Example
         {
             if (!GetRecord(key, out Record record))
             {
-                SetRecord(key, new Record() { Type = Record.TypeEnum.Set, Value = value });
+                SetRecord(key, new Record() { Type = Record.TypeEnum.Folder, Value = value });
                 return;
             }
 
@@ -200,7 +200,8 @@ public class Record
         Int,
         Float,
         String,
-        Set,
+        Folder,
+        File
     }
 
     public string Key = "";

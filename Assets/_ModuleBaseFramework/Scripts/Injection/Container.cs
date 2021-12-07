@@ -181,16 +181,16 @@ namespace ModuleBased.Injection
 
     public class Contraction
     {
-        internal object Identity;
-        internal Type ContractType;
-        internal EContractScope ContractScope = EContractScope.Singleton;
-        internal Type ConcreteType;
-        internal object ConcreteInstance;
-        internal IFactory Factory;
-        internal object[] Args;
-        internal IDisposable Disposable;
+        public object Identity { get; internal set; }
+        public Type ContractType { get; internal set; }
+        public EContractScope ContractScope { get; internal set; } = EContractScope.Singleton;
+        public Type ConcreteType { get; internal set; }
+        public object ConcreteInstance { get; internal set; }
+        public IFactory Factory { get; internal set; }
+        public object[] Args { get; internal set; }
+        public IDisposable Disposable { get; internal set; }
         private bool _isWrapped;
-        internal List<Type> InterceptorTypes = new List<Type>();
+        public List<Type> InterceptorTypes { get; internal set; } = new List<Type>();
 
         #region -- Dirty pattern
         private bool _isDirty = true;
@@ -318,7 +318,7 @@ namespace ModuleBased.Injection
     }
 
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class InjectAttribute : Attribute
     {
         public object Identity { get; }

@@ -12,8 +12,10 @@ namespace ModuleBased.Example.Dialog
         [Inject]
         private IDialogModule _dialogMod;
 
+
         public void ClickPlay()
         {
+            _dialogMod.Load("EroChapter_Prolog.csv");
             _dialogMod.Play();
         }
     }

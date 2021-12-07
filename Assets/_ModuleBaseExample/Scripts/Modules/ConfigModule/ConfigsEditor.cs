@@ -64,11 +64,6 @@ namespace ModuleBased.Example
             return list;
         }
 
-        private void clickHandler()
-        {
-
-        }
-
         private void OnEnable()
         {
             EditorApplication.update += TrySave;
@@ -80,7 +75,7 @@ namespace ModuleBased.Example
             Save();
         }
 
-        float ElementHeight(ReorderableList list, int index)
+        private float ElementHeight(ReorderableList list, int index)
         {
             var keyProp = list.serializedProperty.GetArrayElementAtIndex(index).FindPropertyRelative("Key");
             if (!keyProp.stringValue.Contains(_filter))
@@ -90,7 +85,7 @@ namespace ModuleBased.Example
             return EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing;
         }
 
-        void DrawListItems(ReorderableList list, Rect rect, int index, bool isActive, bool isFocused)
+        private void DrawListItems(ReorderableList list, Rect rect, int index, bool isActive, bool isFocused)
         {
             SerializedProperty element = list.serializedProperty.GetArrayElementAtIndex(index); // The element in the list
             var lockProp = element.FindPropertyRelative("Lock");
@@ -138,41 +133,28 @@ namespace ModuleBased.Example
             switch ((Record.TypeEnum)typeProp.enumValueIndex)
             {
                 case Record.TypeEnum.Bool:
-                    bool boolValue;
-                    if (!bool.TryParse(valueProp.stringValue, out boolValue))
-                        boolValue = false;
-                    valueProp.stringValue = EditorGUI.Toggle(
-                        new Rect(rect.x + secondaryRowTypeWidth, secondaryRowY, secondaryRowValueWidth, EditorGUIUtility.singleLineHeight),
-                        boolValue).ToString();
+                    DrawBool(valueProp, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
                     break;
                 case Record.TypeEnum.Int:
-                    int intValue;
-                    if (!int.TryParse(valueProp.stringValue, out intValue))
-                        intValue = 0;
-                    valueProp.stringValue = EditorGUI.IntField(
-                        new Rect(rect.x + secondaryRowTypeWidth, secondaryRowY, secondaryRowValueWidth, EditorGUIUtility.singleLineHeight),
-                        intValue).ToString();
+                    DrawInt(valueProp, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
                     break;
                 case Record.TypeEnum.Float:
-                    float floatValue;
-                    if (!float.TryParse(valueProp.stringValue, out floatValue))
-                        floatValue = 0.0f;
-                    valueProp.stringValue = EditorGUI.FloatField(
-                        new Rect(rect.x + secondaryRowTypeWidth, secondaryRowY, secondaryRowValueWidth, EditorGUIUtility.singleLineHeight),
-                        floatValue).ToString();
+                    DrawFloat(valueProp, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
                     break;
-                case Record.TypeEnum.Set:
+                case Record.TypeEnum.Folder:
+                    DrawFolder(valueProp, keyProp.stringValue, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
+                    break;
+                case Record.TypeEnum.File:
+                    DrawFile(valueProp, keyProp.stringValue, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
+                    break;
                 case Record.TypeEnum.String:
-                    valueProp.stringValue = EditorGUI.TextField(
-                        new Rect(rect.x + secondaryRowTypeWidth, secondaryRowY, secondaryRowValueWidth, EditorGUIUtility.singleLineHeight),
-                        valueProp.stringValue);
+                    DrawString(valueProp, rect, secondaryRowY, secondaryRowTypeWidth, secondaryRowValueWidth);
                     break;
             }
             GUI.enabled = true;
         }
 
-        //Draws the header
-        void DrawHeader(Rect rect)
+        private void DrawHeader(Rect rect)
         {
             string name = "Record";
             EditorGUI.LabelField(rect, name);
@@ -217,6 +199,81 @@ namespace ModuleBased.Example
 
             serializedObject.ApplyModifiedProperties();
         }
+
+        #region -- Draw fields --
+        private void DrawBool(SerializedProperty valueProp, Rect rect,  float rowY, float typeWidth, float valueWidth)
+        {
+            bool boolValue;
+            if (!bool.TryParse(valueProp.stringValue, out boolValue))
+                boolValue = false;
+            valueProp.stringValue = EditorGUI.Toggle(
+                new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                boolValue).ToString();
+        }
+
+        private void DrawInt(SerializedProperty valueProp, Rect rect, float rowY, float typeWidth, float valueWidth)
+        {
+            int intValue;
+            if (!int.TryParse(valueProp.stringValue, out intValue))
+                intValue = 0;
+            valueProp.stringValue = EditorGUI.IntField(
+                new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                intValue).ToString();
+        }
+
+        private void DrawFloat(SerializedProperty valueProp, Rect rect, float rowY, float typeWidth, float valueWidth)
+        {
+            float floatValue;
+            if (!float.TryParse(valueProp.stringValue, out floatValue))
+                floatValue = 0;
+            valueProp.stringValue = EditorGUI.FloatField(
+                new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                floatValue).ToString();
+        }
+
+        private void DrawString(SerializedProperty valueProp, Rect rect, float rowY, float typeWidth, float valueWidth)
+        {  
+            valueProp.stringValue = EditorGUI.TextField(
+                new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                valueProp.stringValue);
+        }
+
+        private void DrawFolder(SerializedProperty valueProp, string title, Rect rect, float rowY, float typeWidth, float valueWidth)
+        {
+            if (GUI.Button(new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                        valueProp.stringValue, GUI.skin.label))
+            {
+                string defaultPath = valueProp.stringValue;
+                if (string.IsNullOrEmpty(valueProp.stringValue))
+                {
+                    defaultPath = Application.dataPath;
+                }
+                string folder = EditorUtility.OpenFolderPanel(title, defaultPath, "");
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    valueProp.stringValue = folder;
+                }
+            }
+        }
+
+        private void DrawFile(SerializedProperty valueProp, string title, Rect rect, float rowY, float typeWidth, float valueWidth)
+        {
+            if (GUI.Button(new Rect(rect.x + typeWidth, rowY, valueWidth, EditorGUIUtility.singleLineHeight),
+                        valueProp.stringValue, GUI.skin.label))
+            {
+                string defaultPath = valueProp.stringValue;
+                if (string.IsNullOrEmpty(valueProp.stringValue))
+                {
+                    defaultPath = Application.dataPath;
+                }
+                string folder = EditorUtility.OpenFilePanel(title, defaultPath, "");
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    valueProp.stringValue = folder;
+                }
+            }
+        }
+        #endregion
     }
 }
 #endif

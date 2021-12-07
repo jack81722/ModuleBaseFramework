@@ -496,6 +496,7 @@ GameObject:
   - component: {fileID: 1893837108}
   - component: {fileID: 1893837107}
   - component: {fileID: 1893837109}
+  - component: {fileID: 1893837110}
   m_Layer: 0
   m_Name: DialogModule
   m_TagString: Untagged
@@ -516,7 +517,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AutoPlay: 1
+  AutoPlayDelay: 1.5
   PlaySpeed: 10
+  EnableSkip: 0
+  SkipSpeed: 100
 --- !u!4 &1893837108
 Transform:
   m_ObjectHideFlags: 0
@@ -541,5 +545,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30b95f012f2674b40a75caa91d393e5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1893837110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893837106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 594dd8f92524cd34d91bfc8d5e55e61b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
