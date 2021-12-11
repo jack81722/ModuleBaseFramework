@@ -12,245 +12,109 @@ namespace ModuleBased.Example.CommandLine
 {
     public class Parser
     {
-        //public T Parse<T>(IEnumerable<string> args)
-        //{
-        //    var optType = typeof(T);
-        //    var enumerator = args.GetEnumerator();
-        //    if (!enumerator.MoveNext())
-        //        throw new ArgumentException("invalid args [0]: null group");
-
-        //    if (!enumerator.MoveNext())
-        //        throw new ArgumentException("invalid args [1]: null verb");
-        //    var verb = enumerator.Current;
-        //    //if (optType.IsDefined(typeof(VerbAttribute), false))
-        //    //{
-        //    //    var verbAttr = (VerbAttribute)optType.GetCustomAttributes(typeof(VerbAttribute), false)[0];
-        //    //    if (verbAttr.Name != verb)
-        //    //        throw new InvalidOperationException("invalid args [1]: unmatched verb");
-        //    //}
-        //    //else
-        //    //{
-        //    //    if (optType.Name != verb)
-        //    //        throw new InvalidOperationException("invalid args [1]: unmatched verb");
-        //    //}
-
-        //    bool isValue = true;
-        //    ParserValue values = default(ParserValue);
-        //    List<ParserOption> fields = new List<ParserOption>();
-        //    List<string> valueList = new List<string>();
-        //    string flag = "";
-        //    bool isShort = false;
-        //    while (enumerator.MoveNext())
-        //    {
-        //        var current = enumerator.Current;
-        //        if (current.StartsWith("-"))
-        //        {
-        //            if (isValue)
-        //            {
-        //                values = new ParserValue(valueList);
-        //                valueList.Clear();
-        //                isValue = false;
-        //                isShort = !current.StartsWith("--");
-        //                flag = current.TrimStart('-');
-        //                continue;
-        //            }
-        //            fields.Add(new ParserOption(flag, isShort, valueList));
-        //        }
-        //        else
-        //        {
-        //            valueList.Add(current);
-        //        }
-        //    }
-
-        //    OptionProvider<T> provider = new OptionProvider<T>();
-        //    var opt = provider.Generate(values, fields);
-        //    return opt;
-        //}
-
         public static T Parse<T>(IEnumerable<string> args)
         {
-            var info = CommandInfo.Analyze<T>("");
+            var info = CommandInfo.NewAnalyze<T>();
             var opt = info.Parse(args);
             return CommandInfoConverter<T>.Convert(opt);
         }
 
-        private struct ParserValue
+        public static void Parse<T1, T2>(IEnumerable<string> args, Action<T1> onOpt1, Action<T2> onOpt2, Action<Exception> onError)
         {
-            public string[] Values { get; }
-
-            public ParserValue(IEnumerable<string> values)
+            try
             {
-                Values = values.ToArray();
-            }
-        }
-
-        private struct ParserOption
-        {
-            public string FieldName;
-            public bool IsShort;
-            public string[] Values;
-
-            public ParserOption(string name, bool isShort, IEnumerable<string> values)
-            {
-                FieldName = name;
-                IsShort = isShort;
-                Values = values.ToArray();
-            }
-        }
-
-        private class OptionProvider
-        {
-            public Type OptionType { get; }
-            public OptionInjector ValueInjector { get; private set; }
-            public Dictionary<string, OptionInjector> OptionInjectors { get; private set; }
-
-            public OptionProvider(Type optType)
-            {
-                OptionType = optType;
-                OptionInjectors = new Dictionary<string, OptionInjector>();
-                Analyze();
-            }
-
-            public void Analyze()
-            {
-                var props = OptionType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var prop in props)
+                var enumerator = args.GetEnumerator();
+                string verb;
+                if (!enumerator.MoveNext())
+                    throw new InvalidOperationException($"invalid format : no cmd");
+                if (!enumerator.MoveNext())
+                    throw new InvalidOperationException($"invalid format : no verb");
+                verb = enumerator.Current;
+                var info1 = CommandInfoCache<T1>.Info;
+                var info2 = CommandInfoCache<T2>.Info;
+                if (verb == info1.Verb)
                 {
-                    if (prop.IsDefined(typeof(ValueAttribute)))
+                    var opt = info1.Parse(args);
+                    onOpt1.Invoke(CommandInfoConverter<T1>.Convert(opt));
+                    return;
+                }
+                if (verb == info2.Verb)
+                {
+                    var opt = info2.Parse(args);
+                    onOpt2.Invoke(CommandInfoConverter<T2>.Convert(opt));
+                    return;
+                }
+                throw new InvalidOperationException($"invalid format : unknown verb ({verb})");
+            }
+            catch (Exception e)
+            {
+                onError?.Invoke(e);
+            }
+        }
+
+        public static void Parse<T1, T2, T3>(IEnumerable<string> args, Action<T1> onOpt1, Action<T2> onOpt2, Action<T3> onOpt3, Action<Exception> onError)
+        {
+            try
+            {
+                var enumerator = args.GetEnumerator();
+                string verb;
+                if (!enumerator.MoveNext())
+                    throw new InvalidOperationException($"invalid format : no verb");
+                verb = enumerator.Current;
+                var info1 = CommandInfoCache<T1>.Info;
+                var info2 = CommandInfoCache<T2>.Info;
+                var info3 = CommandInfoCache<T3>.Info;
+                if (verb == info1.Verb)
+                {
+                    var opt = info1.Parse(args);
+                    onOpt1.Invoke(CommandInfoConverter<T1>.Convert(opt));
+                    return;
+                }
+                if (verb == info2.Verb)
+                {
+                    var opt = info2.Parse(args);
+                    onOpt2.Invoke(CommandInfoConverter<T2>.Convert(opt));
+                    return;
+                }
+                if (verb == info3.Verb)
+                {
+                    var opt = info3.Parse(args);
+                    onOpt3.Invoke(CommandInfoConverter<T3>.Convert(opt));
+                    return;
+                }
+                throw new InvalidOperationException($"invalid format : unknown verb ({verb})");
+            }
+            catch (Exception e)
+            {
+                onError?.Invoke(e);
+            }
+        }
+
+        public static void Parse(IEnumerable<string> args, IDictionary<Type, Action<object>> onOpt, Action<Exception> onError)
+        {
+            try
+            {
+                var enumerator = args.GetEnumerator();
+                string verb;
+                if (!enumerator.MoveNext())
+                    throw new InvalidOperationException($"invalid format : no verb");
+                verb = enumerator.Current;
+                foreach (var pair in onOpt)
+                {
+                    var info = (CommandInfo)typeof(CommandInfoCache<>).MakeGenericType(pair.Key).GetProperty("Info").GetValue(null);
+                    if (verb == info.Verb)
                     {
-                        if (ValueInjector != null)
-                            throw new InvalidOperationException("duplicate value inject");
-                        ValueInjector = new OptionInjector(prop);
-                    }
-                    if (prop.IsDefined(typeof(OptionAttribute)))
-                    {
-                        var optAttr = prop.GetCustomAttribute<OptionAttribute>();
-                        if (!string.IsNullOrEmpty(optAttr.FullName))
-                            OptionInjectors.Add(optAttr.FullName, new OptionInjector(prop));
-                        if (!string.IsNullOrEmpty(optAttr.ShortName))
-                            OptionInjectors.Add(optAttr.ShortName, new OptionInjector(prop));
+                        var opt = info.Parse(args);
+                        var concrete = typeof(CommandInfoConverter<>).MakeGenericType(pair.Key).GetMethod("Convert").Invoke(null, new object[] { opt });
+                        pair.Value.Invoke(concrete);
+                        return;
                     }
                 }
+                throw new InvalidOperationException($"invalid format : unknown verb ({verb})");
             }
-
-            public object Generate(ParserValue value, IEnumerable<ParserOption> options)
+            catch (Exception e)
             {
-                var option = Activator.CreateInstance(OptionType);
-                ValueInjector.Inject(option, value.Values);
-                foreach (var opt in options)
-                {
-                    if (OptionInjectors.TryGetValue(opt.FieldName, out OptionInjector injector))
-                    {
-                        injector.Inject(option, opt.Values);
-                    }
-                }
-                return option;
-            }
-        }
-
-        private class OptionProvider<T>
-        {
-            static OptionProvider _provider;
-
-            public OptionProvider()
-            {
-                if (_provider == null)
-                {
-                    // analyze
-                    _provider = new OptionProvider(typeof(T));
-                }
-            }
-
-            public T Generate(ParserValue value, IEnumerable<ParserOption> options)
-            {
-                return (T)_provider.Generate(value, options);
-            }
-        }
-
-        private class OptionInjector
-        {
-            public string FullName { get; }
-            public string ShortName { get; }
-            private PropertyInfo _prop;
-            public Type Type { get; }
-            public bool IsArray { get; }
-            public bool IsEnumerable { get; }
-
-            public object DefaultValue;
-            public string HelpText = string.Empty;
-
-
-            public OptionInjector(PropertyInfo prop)
-            {
-                _prop = prop;
-                Type type = prop.PropertyType;
-                IsArray = OptionAssert.IsArray(type);
-                Type = type;
-                if (Type.IsArray)
-                {
-                    Type = type.GetElementType();
-                    IsArray = true;
-                }
-                else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                {
-                    Type = type.GetGenericArguments()[0];
-                    IsEnumerable = true;
-                }
-                else
-                {
-                    Type = type;
-                }
-            }
-
-            public OptionInjector(PropertyInfo prop, OptionAttribute attr)
-            {
-                _prop = prop;
-                Type type = prop.PropertyType;
-                IsArray = OptionAssert.IsArray(type);
-                Type = type;
-                if (Type.IsArray)
-                {
-                    Type = type.GetElementType();
-                    IsArray = true;
-                }
-                else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                {
-                    Type = type.GetGenericArguments()[0];
-                    IsEnumerable = true;
-                }
-                else
-                {
-                    Type = type;
-                }
-                FullName = attr.FullName;
-                ShortName = attr.ShortName;
-                HelpText = attr.HelpText;
-                DefaultValue = attr.Default;
-            }
-
-            public void Inject(object target, IEnumerable<string> values)
-            {
-                int count = values.Count();
-                if (IsArray || IsEnumerable)
-                {
-                    var array = Array.CreateInstance(Type, count);
-                    int index = 0;
-                    foreach (var value in values)
-                    {
-                        var v = Convert.ChangeType(value, Type);
-                        array.SetValue(v, index++);
-                    }
-                    _prop.SetValue(target, array);
-                }
-
-            }
-        }
-
-        private class OptionAssert
-        {
-            public static bool IsArray(Type type)
-            {
-                return type.IsArray || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable));
+                onError?.Invoke(e);
             }
         }
     }
@@ -300,7 +164,6 @@ namespace ModuleBased.Example.CommandLine
 
         #endregion
 
-        public string Name { get; internal set; }
         public string Verb { get; internal set; }
 
         public Type ValueType { get; internal set; }
@@ -407,40 +270,47 @@ namespace ModuleBased.Example.CommandLine
         }
         #endregion
 
-        public static CommandInfo New(string cmdName)
+        #region -- Static methods --
+        public static CommandInfo New()
         {
-            return new CommandInfo
-            {
-                Name = cmdName,
-            };
+            return new CommandInfo();
         }
 
-        public static CommandInfo Analyze<T>(string cmdName)
+        public static CommandInfo NewAnalyze<T>()
         {
-            return Analyze(cmdName, typeof(T));
+            return NewAnalyze(typeof(T));
         }
 
-        public static CommandInfo Analyze(string cmdName, Type type)
+        public static CommandInfo NewAnalyze(Type type)
         {
-            CommandInfo info = New(cmdName);
+            CommandInfo info = New();
+            info.Analyze(type);
+            Debug.Log($"new analyze : {info}");
+            return info;
+        }
+        #endregion
+
+        public void Analyze(Type type)
+        {
+            _dt.Clear();
             if (type.IsDefined(typeof(VerbAttribute), false))
             {
                 var verbAttr = type.GetCustomAttribute<VerbAttribute>();
-                info.Verb = verbAttr.Name;
+                Verb = verbAttr.Name;
             }
             else
             {
-                info.Verb = type.Name;
+                Verb = type.Name;
             }
             var props = type.GetProperties();
             foreach (var prop in props)
             {
                 if (prop.IsDefined(typeof(ValueAttribute)))
                 {
-                    info.ValueType = prop.PropertyType;
+                    ValueType = prop.PropertyType;
                 }
                 if (prop.IsDefined(typeof(OptionAttribute)))
-                {
+                {   
                     var optAttr = prop.GetCustomAttribute<OptionAttribute>();
                     var optInfo = new OptionInfo
                     {
@@ -450,10 +320,15 @@ namespace ModuleBased.Example.CommandLine
                         HelpText = optAttr.HelpText,
                         ValueType = prop.PropertyType,
                     };
-                    info.CreateOptionInfo(optInfo);
+                    Debug.Log(optInfo);
+                    CreateOptionInfo(optInfo);
                 }
             }
-            return info;
+        }
+
+        public void Analyze<T>()
+        {
+            Analyze(typeof(T));
         }
 
         public void SetValue(CommandOptions options, IEnumerable<string> args)
@@ -574,14 +449,42 @@ namespace ModuleBased.Example.CommandLine
         {
             StringBuilder builder = new StringBuilder();
             builder.Append("{");
-            builder.Append($"Name:{Name}");
-            if (!string.IsNullOrEmpty(Verb))
-                builder.Append($", Verb:{Verb}");
-            builder.Append($", Opt:{this.ToArrayString()}");
-            builder.Append(")");
+            bool hasVerb = !string.IsNullOrEmpty(Verb);
+            if (hasVerb)
+                builder.Append($"Verb:{Verb}");
+            if (hasVerb)
+                builder.Append($", Opt:{this.ToArrayString()}");
+            else
+                builder.Append($"Opt:{this.ToArrayString()}");
+            builder.Append("}");
             return builder.ToString();
         }
 
+    }
+
+    public class CommandInfo<T> : CommandInfo
+    {
+        public CommandInfo()
+        {
+            Analyze<T>();
+        }
+    }
+
+    public class CommandInfoCache<T>
+    {
+        static CommandInfo _info;
+        public static CommandInfo Info {
+            get
+            {
+                if (_info == null)
+                {
+                    _info = CommandInfo.NewAnalyze<T>();
+                }
+                return _info;
+            }
+        }
+
+        public static string Verb => Info.Verb;
     }
 
     public static class CommandInfoExtension
@@ -624,6 +527,7 @@ namespace ModuleBased.Example.CommandLine
 
         public static CommandOptions Parse(this CommandInfo info, IEnumerable<string> args)
         {
+            Debug.Log(info);
             var enumerator = args.GetEnumerator();
             var options = new CommandOptions();
             List<string> temp_args = new List<string>();
@@ -796,7 +700,6 @@ namespace ModuleBased.Example.CommandLine
         }
     }
 
-
     public class CommandInfoConverter
     {
         private Type _targetType;
@@ -826,9 +729,9 @@ namespace ModuleBased.Example.CommandLine
         }
 
         public object Convert(CommandOptions options)
-        {   
+        {
             var target = Activator.CreateInstance(_targetType);
-            if(_valueInfo != null)
+            if (_valueInfo != null)
                 _valueInfo.Set(target, options.Value);
             foreach (var pair in options)
             {
