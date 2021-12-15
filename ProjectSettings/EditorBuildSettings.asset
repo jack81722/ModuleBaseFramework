@@ -21,6 +21,6 @@ EditorBuildSettings:
     path: Assets/_ModuleBaseExample/Scenes/Option.unity
     guid: 7bec1ed88b5844640b63ec7e2169caec
   - enabled: 1
-    path: Assets/_ModuleBaseExample/Scenes/Dialog.unity
+    path: Assets/_ModuleBaseExample/Scenes/Drama.unity
     guid: 88441c20bd43bd34d9383be9ba238dff
   m_configObjects: {}

@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.elringus.spritedicing": {
+      "version": "https://github.com/Elringus/SpriteDicing.git#package",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "d441dba4fda79c8207608e2126165c2b1110657d"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

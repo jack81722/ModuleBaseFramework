@@ -1,4 +1,4 @@
-using ModuleBased.Example.Dialog;
+using ModuleBased.Example.Drama.Dialog;
 using ModuleBased.Example.GameFlow;
 using System;
 using System.Collections;
