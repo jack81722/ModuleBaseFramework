@@ -70,7 +70,6 @@ namespace ModuleBased.ForUnity
 
         private void LoadSceneAndSetup(Scene scene, LoadSceneMode mode)
         {
-            Debug.Log($"Load scene : {scene.name}");
             var list = new List<Contraction>();
             var monos = scene.GetRootGameObjects()
                 .Deverge((go) => go.GetComponentsInChildren<MonoBehaviour>());

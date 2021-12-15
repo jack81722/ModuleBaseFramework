@@ -820,12 +820,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 5269580255189401261}
   m_PrefabAsset: {fileID: 0}
---- !u!225 &2006846985 stripped
-CanvasGroup:
-  m_CorrespondingSourceObject: {fileID: 2006846981, guid: 52b0947ea78cc1446b9b73329933b97b,
-    type: 3}
-  m_PrefabInstance: {fileID: 5269580255189401261}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2126641765
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,11 +871,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1436632540}
     m_Modifications:
-    - target: {fileID: 907002869661530863, guid: 52b0947ea78cc1446b9b73329933b97b,
-        type: 3}
-      propertyPath: _canvasGroup
-      value: 
-      objectReference: {fileID: 2006846985}
     - target: {fileID: 5269580255191376115, guid: 52b0947ea78cc1446b9b73329933b97b,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -890,26 +879,6 @@ PrefabInstance:
     - target: {fileID: 5269580255191376115, guid: 52b0947ea78cc1446b9b73329933b97b,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5269580255217866270, guid: 52b0947ea78cc1446b9b73329933b97b,
-        type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5269580255638181794, guid: 52b0947ea78cc1446b9b73329933b97b,
-        type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5269580255638181794, guid: 52b0947ea78cc1446b9b73329933b97b,
-        type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5269580255638181794, guid: 52b0947ea78cc1446b9b73329933b97b,
-        type: 3}
-      propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5269580256605892777, guid: 52b0947ea78cc1446b9b73329933b97b,

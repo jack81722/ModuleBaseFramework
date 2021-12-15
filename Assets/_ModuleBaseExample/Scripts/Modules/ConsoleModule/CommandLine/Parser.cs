@@ -16,6 +16,20 @@ namespace ModuleBased.Example.CommandLine
             return CommandInfoConverter<T>.Convert(opt);
         }
 
+        public static void Parse<T>(IEnumerable<string> args, Action<T> onOpt, Action<Exception> onError)
+        {
+            try
+            {
+                var info = CommandInfo.NewAnalyze<T>();
+                var opt = info.Parse(args);
+                onOpt?.Invoke(CommandInfoConverter<T>.Convert(opt));
+            }
+            catch (Exception e)
+            {
+                onError?.Invoke(e);
+            }
+        }
+
         public static void Parse<T1, T2>(IEnumerable<string> args, Action<T1> onOpt1, Action<T2> onOpt2, Action<Exception> onError)
         {
             try

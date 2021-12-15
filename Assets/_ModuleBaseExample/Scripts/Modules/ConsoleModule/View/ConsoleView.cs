@@ -67,6 +67,11 @@ namespace ModuleBased.Example
             scaleLogField(lineCount);
         }
 
+        public void TypeCommand(string line)
+        {
+            _inputCmd.text = line;
+        }
+
         public void Commit(string line)
         {
             // skip empty input

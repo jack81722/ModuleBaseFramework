@@ -22,9 +22,16 @@ namespace ModuleBased.Example
         private IGameCore _core;
         [Inject]
         private ConsoleView _view;
+        [Inject]
+        private IConfigModule _config;
         #endregion
 
         private bool open_console;
+
+        #region -- History --
+        private int _historyIndex;
+        private List<string> _history = new List<string>();
+        #endregion
 
         private void Update()
         {
@@ -36,6 +43,29 @@ namespace ModuleBased.Example
                 else
                     _view.Hide();
             }
+            if (open_console && Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                _historyIndex++;
+                if (_historyIndex > _history.Count)
+                    _historyIndex = _history.Count;
+                if (_history.Count > 0)
+                {
+                    _view.TypeCommand(_history[_history.Count - _historyIndex]);
+                }
+            }
+            if (open_console && Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                _historyIndex--;
+                if (_historyIndex <= 0)
+                {
+                    _historyIndex = 0;
+                    _view.TypeCommand(string.Empty);
+                }
+                else if (_history.Count > 0)
+                {
+                    _view.TypeCommand(_history[_history.Count - _historyIndex]);
+                }
+            }
         }
 
         public void ExecuteCommand(string line)
@@ -43,47 +73,56 @@ namespace ModuleBased.Example
             if (string.IsNullOrEmpty(line))
                 return;
             var splited = CommandSpliter.Split(line);
+            _view.Log(line, italic: true);
+            _history.Add(line);
+            _historyIndex = 0;
 
-            string result = string.Empty;
             Parser.Parse<GetOption, SetOption>(splited,
-                (g) =>
+                (getOpt) =>
                 {
-                    _view.Log(g.ToString());
+                    var keys = getOpt.Value;
+                    Dictionary<string, string> kv = new Dictionary<string, string>();
+                    foreach (var key in keys)
+                    {
+                        kv.Add(key, _config.LoadOrDefault(key).ToString());
+                    }
+                    _view.Log(kv.ToArrayString());
                 },
-                (s) =>
+                (setOpt) =>
                 {
-                    _view.Log(s.ToString());
+                    var enumerator = setOpt.Value.GetEnumerator();
+                    var key = enumerator.MoveNext() ? enumerator.Current : throw new InvalidOperationException("invalid format: no config key");
+                    var value = enumerator.MoveNext() ? enumerator.Current : throw new InvalidOperationException("invalid format: no config value");
+                    if (setOpt.IsBool)
+                    {
+                        if (!bool.TryParse(value, out bool result))
+                            throw new InvalidOperationException("invalid formate: the value not a bool");
+                        _config.Save<bool>(key, result);
+                        return;
+                    }
+                    if (setOpt.IsFloat)
+                    {
+                        if (!float.TryParse(value, out float result))
+                            throw new InvalidOperationException("invalid formate: the value not a float");
+                        _config.Save<float>(key, result);
+                        return;
+                    }
+                    if (setOpt.IsInt)
+                    {
+                        if (!int.TryParse(value, out int result))
+                            throw new InvalidOperationException("invalid formate: the value not a integer");
+                        _config.Save<int>(key, result);
+                        return;
+                    }
+                    _config.Save<string>(key, value);
                 },
-                (e) =>
+                (err) =>
                 {
-                    _view.Log(e.ToString(), new Color(0.8f, 0, 0), italic: true);
+                    _view.Log(err.ToString(), new Color(0.8f, 0, 0), italic: true);
+                    Debug.LogError(err);
                 });
         }
 
-    }
-
-
-
-
-    [Verb("get")]
-    public class GetOption
-    {
-        [Value("value")]
-        public IEnumerable<string> Value { get; set; }
-
-        [Option("f", "float", false, false, "get by float")]
-        public bool IsFloat { get; set; }
-
-        [Option("i", "int", false, false, "get by int")]
-        public bool IsInt { get; set; }
-
-        [Option("b", "bool", false, false, "get by bool")]
-        public bool IsBool { get; set; }
-
-        public override string ToString()
-        {
-            return $"Get value:[{Value.ToArrayString()}], f:{IsFloat}, i:{IsInt}, b:{IsBool}";
-        }
     }
 
     [Verb("set")]
@@ -105,6 +144,14 @@ namespace ModuleBased.Example
         {
             return $"Set value:[{Value.ToArrayString()}], f:{IsFloat}, i:{IsInt}, b:{IsBool}";
         }
+    }
+
+    [Verb("get")]
+    public class GetOption
+    {
+        [Value("value")]
+        public IEnumerable<string> Value { get; set; }
+
     }
 
     [AttributeUsage(AttributeTargets.Method)]

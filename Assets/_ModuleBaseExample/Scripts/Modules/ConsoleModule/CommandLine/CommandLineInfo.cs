@@ -484,6 +484,10 @@ namespace ModuleBased.Example.CommandLine
             {
                 optInfo.SetOption(options, temp_args);
             }
+            if (inValue)
+            {
+                info.SetValue(options, temp_args);
+            }
             return options;
 
             bool tryNext(out string cur_arg)

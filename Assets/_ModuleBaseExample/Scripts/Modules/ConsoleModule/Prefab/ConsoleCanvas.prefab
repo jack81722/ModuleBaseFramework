@@ -536,24 +536,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: '<color=#FF00FF><b>New Text</b></color>123
-
-    <color=#FF00FF><b>New Text</b></color>123
-
-    <color=#FF00FF><b>New
-    Text</b></color>123
-
-    <color=#FF00FF><b>New Text</b></color>123
-
-    <color=#FF00FF><b>New
-    Text</b></color>123
-
-    <color=#FF00FF><b>New Text</b></color>123
-
-    <color=#FF00FF><b>New
-    Text</b></color>123
-
-    <color=#FF00FF><b>New Text</b></color>123'
+  m_Text: 
 --- !u!1 &5269580255463481804
 GameObject:
   m_ObjectHideFlags: 0
@@ -956,7 +939,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MaxLine: 30
-  MaxHorizontalWord: 100
-  _canvas: {fileID: 5269580256605892778}
+  MaxHorizontalWord: 50
+  _canvasGroup: {fileID: 2006846981}
   _inputCmd: {fileID: 5269580254761201589}
   _txtLog: {fileID: 5269580255217866265}
