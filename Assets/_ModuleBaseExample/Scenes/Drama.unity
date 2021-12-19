@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 227016424}
   - component: {fileID: 227016425}
+  - component: {fileID: 227016426}
   m_Layer: 0
   m_Name: PortaitModule
   m_TagString: Untagged
@@ -166,6 +167,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 004e1535c4de43e4395c32b7f12e6161, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &227016426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 227016423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ca45704f634499419cc074df974c307, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sprite: {fileID: -4927201463670486385, guid: 340f64f146d76174299d4ed06159568b, type: 2}
 --- !u!1 &315280729
 GameObject:
   m_ObjectHideFlags: 0
@@ -917,7 +931,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 755fca1f2babddb4499376b8fedf433b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _prefab: {fileID: 5231438751458102413, guid: 199c39c6f33cbed42acbb4376b1314f7, type: 3}
+  Prefab: {fileID: 5231438751458102413, guid: 199c39c6f33cbed42acbb4376b1314f7, type: 3}
+  BatchSpawnSize: 8
 --- !u!1 &1329606789
 GameObject:
   m_ObjectHideFlags: 0

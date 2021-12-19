@@ -1,11 +1,8 @@
 {
-    "name": "ModuleBased.Example",
-    "rootNamespace": "ModuleBased.Example",
+    "name": "Cheap2.Plugin.TweenExt",
+    "rootNamespace": "",
     "references": [
-        "GUID:4a7e3a746dd4c284bb26e935f071e962",
-        "GUID:63dbb7b45b107d749ab2b38a54c1b37e",
-        "GUID:0ddf4caa623ceb74eabf19ba49d301f7",
-        "GUID:a0c63ad650dc8ce4fa4fe86bb0a4f93b"
+        "GUID:63dbb7b45b107d749ab2b38a54c1b37e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

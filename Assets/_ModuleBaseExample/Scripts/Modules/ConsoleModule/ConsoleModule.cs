@@ -118,7 +118,7 @@ namespace ModuleBased.Example
                 },
                 (err) =>
                 {
-                    _view.Log(err.ToString(), new Color(0.8f, 0, 0), italic: true);
+                    _view.Println(err.ToString(), new Color(0.8f, 0, 0), italic: true);
                     Debug.LogError(err);
                 });
         }

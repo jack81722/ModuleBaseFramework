@@ -1,13 +1,16 @@
+using Cheap2.Plugin.Pool;
 using ModuleBased.Example.Drama.Portrait;
 using ModuleBased.ForUnity;
 using ModuleBased.Injection;
 using ModuleBased.Proxy;
 using ModuleBased.Proxy.AOP;
 using ModuleBased.Proxy.AOP.Handlers;
+using ModuleBased.Rx;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace ModuleBased.Example.Drama.Dialog
@@ -38,13 +41,17 @@ namespace ModuleBased.Example.Drama.Dialog
         [Inject]
         private IPortraitModule _portraitModule;
 
+
+        // BackgroundModule
+        [Inject]
+        private IPool<ChatBox> _chatBoxPool;
         [Inject]
         private DialogRepo _repo;
         #endregion
 
-        private ChatBox _chatBox;
-        private int _chatIndex;
-        private List<string> _chatBuff = new List<string>();
+        private IDramaAction _action;
+        private int _actIndex;
+        private List<DialogInfo> _dialogBuff = new List<DialogInfo>();
 
         public void OnInject()
         {
@@ -62,7 +69,7 @@ namespace ModuleBased.Example.Drama.Dialog
             _configMod.Subcribe<bool>(DIALOG_ENABLE_SKIP, listen_EnableSkip);
             _configMod.Subcribe<float>(DIALOG_SKIP_SPEED, listen_SkipSpeed);
 
-            
+
         }
 
         #region -- Events --
@@ -78,9 +85,9 @@ namespace ModuleBased.Example.Drama.Dialog
 
         private void listen_DialogSpeed(float speed)
         {
-            if (_chatBox != null)
+            if (_action != null)
             {
-                _chatBox.ModifySpeed(speed);
+                _action.ModifySpeed(speed);
             }
         }
 
@@ -89,14 +96,14 @@ namespace ModuleBased.Example.Drama.Dialog
             EnableSkip = skip;
             SkipSpeed = _configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED);
             if (skip)
-                _chatBox?.ModifySpeed(_configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED));
+                _action?.ModifySpeed(_configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED));
         }
 
         private void listen_SkipSpeed(float speed)
         {
             SkipSpeed = speed;
             if (EnableSkip)
-                _chatBox?.ModifySpeed(_configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED));
+                _action?.ModifySpeed(_configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED));
         }
         #endregion
 
@@ -124,48 +131,88 @@ namespace ModuleBased.Example.Drama.Dialog
         }
         #endregion
 
+        #region -- IDialogModule
         [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
         public void Pause()
         {
-            _chatBox.PauseChat();
+            _action.Pause();
         }
 
         [UniLog(EAOPStatus.Before)]
         public void Load(string chapterName)
         {
             DialogModel model = _repo.GetByChapterName(chapterName);
-            _chatBuff = model.Chats.Select(c => c.Content).ToList();
+            _dialogBuff = model.Chats.Select(c => new DialogInfo { Name = c.Name, Content = c.Content }).ToList();
         }
 
         [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
-        public void Play([Inject] ChatBox box = null)
+        public void Play()
         {
-            if (box == null)
-                return;
-            _chatBox?.Dispose();
-            _chatBox = box;
+            _action?.Dispose();
             PlayNext();
-        }
-
-        private void PlayNext()
-        {
-            if (_chatIndex >= _chatBuff.Count)
-            {
-                return;
-            }
-            _chatBox.Display();
-            float speed = EnableSkip ? SkipSpeed : PlaySpeed;
-            _chatBox.PlayChat(_chatBuff[_chatIndex++], speed);
         }
 
         [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
         public void Resume()
         {
-            if (_chatBox != null && _chatBox.IsPause())
+            if (_action != null && _action.IsPause())
             {
-                _chatBox.ContinueChat();
+                _action.Resume();
                 return;
             }
+        }
+
+        [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
+        public void Stop()
+        {
+            if (_action == null)
+                return;
+            _action.Dispose();
+            _action = null;
+            _actIndex = 0;
+        }
+        #endregion
+
+        Dictionary<string, Func<string[], IDramaAction>> _actions = new Dictionary<string, Func<string[], IDramaAction>>();
+        public void RegisterAction(string name, Func<string[], IDramaAction> action)
+        {
+            _actions.Add(name, action);
+        }
+
+        private void PlayNext()
+        {
+            if (_actIndex >= _dialogBuff.Count)
+                return;
+            if (_action != null)
+                _action.Dispose();
+            var dialog = _dialogBuff[_actIndex++];
+            _action = ExecuteDialog(dialog);
+            _action.Play();
+        }
+
+        private IDramaAction ExecuteDialog(DialogInfo info)
+        {
+            float speed = EnableSkip ? SkipSpeed : PlaySpeed;
+            if (info.Name == "Action")
+            {
+                List<IDramaAction> actions = new List<IDramaAction>();
+                var lines = info.Content.Split('\n');
+                foreach (var line in lines)
+                {
+                    string actName = line.Substring(0, line.IndexOf('('));
+                    if (_actions.TryGetValue(actName, out Func<string[], IDramaAction> action))
+                    {
+                        var argLine = line.Replace(actName, "").Replace("(", "").Replace(")", "");
+                        var args = argLine.Split(',').Select((a) => a.Trim(' ')).ToArray();
+                        actions.Add(action.Invoke(args));
+                    }
+                }
+                return new ParallelDramaAction(actions.ToArray());
+            }
+            // default case
+            var chatBox = _chatBoxPool.Pop();
+            chatBox.Set(info.Name, info.Content, speed);
+            return chatBox;
         }
 
         public void QuickSkip(bool skip)
@@ -178,17 +225,6 @@ namespace ModuleBased.Example.Drama.Dialog
 
         }
 
-        [UniLog(EAOPStatus.Before | EAOPStatus.Error)]
-        public void Stop()
-        {
-            if (_chatBox == null)
-                return;
-            _chatBox.Dispose();
-            _chatBox.Hide();
-            _chatBox = null;
-            _chatIndex = 0;
-        }
-
         #region -- Unity APIs --
         private float _autoPlayTimer = 0f;
         private void Update()
@@ -198,7 +234,7 @@ namespace ModuleBased.Example.Drama.Dialog
                 QuickSkip(!EnableSkip);
             }
 
-            if (_chatBox != null && _chatBox.IsFinished())
+            if (_action != null && _action.IsFinished())
             {
                 if (EnableSkip)
                 {
@@ -221,48 +257,14 @@ namespace ModuleBased.Example.Drama.Dialog
         #endregion
     }
 
-    public class DialogModuleProxy : AOPProxyBase<IDialogModule>, IDialogModule
+    public class DialogInfo
     {
-        public DialogModuleProxy(object real) : base(real)
+        public string Name;
+        public string Content;
+
+        public override string ToString()
         {
+            return $"(Name:{Name}, Content:{Content})";
         }
-
-        public void Load(string chapterName)
-        {
-            InvokeProxyMethod(chapterName);
-        }
-
-        public void Pause()
-        {
-            InvokeProxyMethod();
-        }
-
-        public void Play(ChatBox box = null)
-        {
-            InvokeProxyMethod(box);
-        }
-
-        public void Resume()
-        {
-            InvokeProxyMethod();
-        }
-
-        public void Stop()
-        {
-            InvokeProxyMethod();
-        }
-    }
-
-    public interface IDialogModule
-    {
-        void Load(string chapterName);
-
-        void Play(ChatBox box = null);
-
-        void Pause();
-
-        void Resume();
-
-        void Stop();
     }
 }

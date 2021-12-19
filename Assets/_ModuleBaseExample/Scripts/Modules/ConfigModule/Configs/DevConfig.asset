@@ -36,7 +36,7 @@ MonoBehaviour:
   - Key: file_dialog_path
     Lock: 1
     Type: 4
-    Value: E:/Work Space/Unity Projects/ModuleBaseFramework/Assets/_ModuleBaseExample/Scripts/Modules/DialogModule
+    Value: E:/Work Space/Unity Projects/ModuleBaseFramework/Assets/_ModuleBaseExample/Scripts/Modules/Drama.DialogModule
   - Key: dialog_chapter
     Lock: 1
     Type: 3

@@ -15,6 +15,10 @@ namespace ModuleBased.Example
         public int MaxLine = 30;
         public int MaxHorizontalWord = 100;
         public int FontSize => _txtLog.fontSize;
+
+        public Color ErrorColor = new Color(0.8f, 0, 0);
+        public Color LogColor = Color.white;
+        public Color WarningColor = Color.yellow;
         #endregion
 
         #region -- Require --
@@ -84,21 +88,30 @@ namespace ModuleBased.Example
         }
 
         public void Log(object log, bool bold = false, bool italic = false)
-        {
-            if (log == null)
-                return;
-            // update log 
-            log = insertNewLine(log.ToString());
-            string beginBold = bold ? "<b>" : string.Empty;
-            string endBold = bold ? "</b>" : string.Empty;
-            string beginItalic = italic ? "<i>" : string.Empty;
-            string endItalic = italic ? "</i>" : string.Empty;
-            log = beginBold + beginItalic + insertNewLine(log.ToString()) + endItalic + endBold;
-            _txtLog.text = log + "\n" + _txtLog.text;
-            Refresh();
+        {   
+            Println(log, LogColor, bold, italic);
+#if UNITY_EDITOR
+            Debug.Log(log);
+#endif
         }
 
-        public void Log(object log, Color color, bool bold = false, bool italic = false)
+        public void LogError(object log, bool bold = false, bool italic = false)
+        {
+            Println(log, ErrorColor, bold, italic);
+#if UNITY_EDITOR
+            Debug.LogError(log);
+#endif
+        }
+
+        public void LogWarning(object log, bool bold = false, bool italic = false)
+        {
+            Println(log, WarningColor, bold, italic);
+#if UNITY_EDITOR
+            Debug.LogWarning(log);
+#endif
+        }
+
+        public void Println(object log, Color color, bool bold = false, bool italic = false)
         {
             if (log == null)
                 return;
@@ -112,7 +125,6 @@ namespace ModuleBased.Example
             log = beginColor + beginBold + beginItalic + insertNewLine(log.ToString()) + endItalic + endBold + endColor;
             _txtLog.text = log + "\n" + _txtLog.text;
             Refresh();
-
         }
 
         private string insertNewLine(string result)

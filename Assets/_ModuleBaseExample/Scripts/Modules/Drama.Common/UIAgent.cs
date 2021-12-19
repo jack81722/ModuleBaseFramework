@@ -71,12 +71,12 @@ namespace ModuleBased.Example.Drama
         }
         #endregion
 
-        public void Hide()
+        public virtual void Hide()
         {
             _graph.enabled = false;
         }
 
-        public void Display()
+        public virtual void Display()
         {
             _graph.enabled = true;
         }

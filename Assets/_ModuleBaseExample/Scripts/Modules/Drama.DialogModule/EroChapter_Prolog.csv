@@ -1,5 +1,6 @@
 Name,Content,Padding
-,,"ChangeBg(Bg_Classroom, 0.5)"
+Action,"NewPortrait(1, misaki, L)
+ShakePortrait(1, 1, 1)","ChangeBg(Bg_Classroom, 0.5)"
 ,,BGM(代用BGM_日常)
 ,XXXXXXXXXXX,"EnterPortrait(kohaku_02, 0, 0)"
 葵,XXXXXXXXXXXXXX,"ExitPortrait(kohaku_02, 0, 0.5)"
