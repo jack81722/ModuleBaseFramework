@@ -8,9 +8,13 @@ namespace ModuleBased.Example.Drama
 {
     public interface IDramaAction : IObservable, IDisposable, IPlayable
     {
+        float TimeScale { get; set; }
+
         bool IsPause();
 
-        bool IsFinished();
+        bool IsCompleted();
+
+        void Complete();
 
     }
 }

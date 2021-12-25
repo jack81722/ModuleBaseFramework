@@ -10,9 +10,16 @@ namespace ModuleBased.Example.Drama
     {
         Subject<object> _subject = new Subject<object>();
 
+        public float TimeScale { get; set; }
+
+        public void Complete()
+        {
+            
+        }
+
         public void Dispose() { }
 
-        public bool IsFinished()
+        public bool IsCompleted()
         {
             return true;
         }

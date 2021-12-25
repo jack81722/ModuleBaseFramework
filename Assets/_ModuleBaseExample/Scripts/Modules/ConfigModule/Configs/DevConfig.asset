@@ -24,15 +24,15 @@ MonoBehaviour:
   - Key: dialog_play_speed
     Lock: 1
     Type: 2
-    Value: 20
+    Value: 1
   - Key: dialog_enable_skip
     Lock: 1
     Type: 0
     Value: False
-  - Key: dialog_skip_speed
+  - Key: dialog_fastforward_speed
     Lock: 1
     Type: 2
-    Value: 100
+    Value: 3
   - Key: file_dialog_path
     Lock: 1
     Type: 4

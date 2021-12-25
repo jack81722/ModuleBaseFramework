@@ -2,6 +2,7 @@ using Cheap2.Plugin.TweenExt;
 using DG.Tweening;
 using ModuleBased.Rx;
 using System;
+using UnityEngine;
 
 namespace ModuleBased.Example.Drama
 {
@@ -15,14 +16,10 @@ namespace ModuleBased.Example.Drama
         {
             _tween = tween;
             _tween.SetAutoKill(false);
-            _disposable = _tween.ToObservable().Subscribe(
-                (t) => subject.OnNext(t),
-                (e) => subject.OnError(e),
-                () =>
-                {
-                    subject.OnCompleted();
-                });
+            _disposable = _tween.ToObservable().Subscribe(subject);
         }
+
+        public float TimeScale { get => _tween.timeScale; set => _tween.timeScale = value; }
 
         public void Dispose()
         {
@@ -30,7 +27,7 @@ namespace ModuleBased.Example.Drama
             _disposable.Dispose();
         }
 
-        public bool IsFinished()
+        public bool IsCompleted()
         {
             bool result = _tween.IsComplete();
             return result;
@@ -40,12 +37,6 @@ namespace ModuleBased.Example.Drama
         {
             bool result = _tween.IsActive() && !_tween.IsPlaying();
             return result;
-        }
-
-        public void ModifySpeed(float spdScale)
-        {
-            _tween.timeScale = spdScale;
-            return;
         }
 
         public void Pause()
@@ -68,6 +59,18 @@ namespace ModuleBased.Example.Drama
         {
             if (_tween.IsActive())
                 _tween.Kill();
+        }
+
+        public void Complete()
+        {
+            Debug.Log($"complete tween :{_tween.target}");
+            if (_tween == null)
+                Debug.LogError("tween is null.");
+            if(_tween != null && _tween.IsPlaying())
+            {
+                Debug.Log($"complete {_tween.target}");
+                _tween.Complete();
+            }
         }
 
         public IDisposable Subscribe(IObserver<object> observer)

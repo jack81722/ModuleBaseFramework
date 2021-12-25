@@ -31,7 +31,8 @@ namespace ModuleBased.Example.Drama.Other
     public class WaitDramaAction : IDramaAction
     {
         private float _second;
-        private bool _isFinished;
+        private float _timeScale = 1;
+        private bool _isCompleted;
         private Coroutine _coroutine;
         private Subject<object> _subject;
 
@@ -45,16 +46,16 @@ namespace ModuleBased.Example.Drama.Other
         {
             while(_second > 0)
             {
-                _second -= Time.deltaTime;
+                _second -= Time.deltaTime * _timeScale;
                 yield return null;
             }
         }
 
         public void Dispose() { }
 
-        public bool IsFinished()
+        public bool IsCompleted()
         {
-            return _isFinished;
+            return _isCompleted;
         }
 
         public bool IsPause()
@@ -62,6 +63,7 @@ namespace ModuleBased.Example.Drama.Other
             return false;
         }
 
+        public float TimeScale { get => _timeScale; set => _timeScale = value; }
 
         public void Pause() { }
 
@@ -82,9 +84,18 @@ namespace ModuleBased.Example.Drama.Other
             return _subject.Subscribe(observer);
         }
 
+        public void Complete()
+        {
+            MainThreadDispatcher.SendStopCoroutine(_coroutine);
+            onCompleted();
+        }
+
         #region -- Events --
         private void onCompleted()
         {
+            if (_isCompleted)
+                return;
+            _isCompleted = true;
             _subject.OnCompleted();
         }
         #endregion

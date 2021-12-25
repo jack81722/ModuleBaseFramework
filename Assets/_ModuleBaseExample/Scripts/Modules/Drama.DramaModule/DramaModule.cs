@@ -12,22 +12,16 @@ using UnityEngine;
 namespace ModuleBased.Example.Drama
 {
     [Injectable(typeof(IDramaModule))]
-    public class DramaModule : MonoBehaviour, IDramaModule
+    public class DramaModule : MonoBehaviour, IDramaModule, IEventInject
     {
         #region -- Configs -- 
-        private const string DIALOG_AUTO_PLAY = "dialog_auto_play";
-        private const string DIALOG_AUTO_PLAY_DELAY = "dialog_auto_play_delay";
         private const string DIALOG_PLAY_SPEED = "dialog_play_speed";
-        private const string DIALOG_ENABLE_SKIP = "dialog_enable_skip";
-        private const string DIALOG_SKIP_SPEED = "dialog_skip_speed";
+        private const string DIALOG_FASTFORWARD_SPEED = "dialog_fastforward_speed";
         #endregion
 
         #region -- Config Values --
-        public bool AutoPlay = true;
-        public float AutoPlayDelay = 1.5f;
-        public float PlaySpeed = 5f;
-        public bool EnableSkip = false;
-        public float SkipSpeed = 100f;
+        public float PlaySpeed = 1f;
+        public float FastForwardSpeed = 100f;
         #endregion
 
         #region -- Required --
@@ -39,6 +33,8 @@ namespace ModuleBased.Example.Drama
         private IDialogModule _dialogModule;
         #endregion
 
+        [SerializeField]
+        private bool _isPause;
         private IDramaState _current;
         private int _currentIndex = -1;
         private List<ChatModel> _scriptRaws = new List<ChatModel>();
@@ -53,7 +49,9 @@ namespace ModuleBased.Example.Drama
             _currentIndex++;
             var model = _scriptRaws[_currentIndex];
             var acts = AnalyzeAction(model);
+            _current?.Dispose();
             _current = new DramaState(acts);
+            _current.SetTimeScale(PlaySpeed);
             _current.Play();
         }
 
@@ -84,9 +82,19 @@ namespace ModuleBased.Example.Drama
         #region -- Unity APIs --
         private void Update()
         {
-            if (_current != null && _current.IsCompleted())
+            if (Input.GetKeyDown(KeyCode.P))
             {
-                PlayNext();
+                if (_isPause)
+                    Resume();
+                else
+                    Pause();
+            }
+            if (_current != null)
+            {
+                if (_current.IsCompleted())
+                {
+                    PlayNext();
+                }
             }
         }
         #endregion
@@ -111,12 +119,48 @@ namespace ModuleBased.Example.Drama
                 return;
             _actions.Add(name, handler);
         }
+
+
+        public void CompleteCurrentState()
+        {
+            if (_current != null)
+                _current.Complete();
+        }
+
+        public void CompleteOrNextState()
+        {
+            if (_current == null)
+                return;
+            if (_current.IsCompleted())
+            {
+                PlayNext();
+                return;
+            }
+            CompleteCurrentState();
+        }
+
+        public void BeginFastForward()
+        {   
+            PlaySpeed = FastForwardSpeed;
+            if (_current == null)
+                return;
+            _current.SetTimeScale(PlaySpeed);
+        }
+
+        public void EndFastForward()
+        {
+            PlaySpeed = 1;
+            if (_current == null)
+                return;
+            _current.SetTimeScale(PlaySpeed);
+        }
         #endregion
 
         #region -- IPlayable --
 
         public void Pause()
         {
+            _isPause = true;
             if (_current != null)
                 _current.Pause();
         }
@@ -133,6 +177,7 @@ namespace ModuleBased.Example.Drama
 
         public void Resume()
         {
+            _isPause = false;
             if (_current != null)
                 _current.Resume();
         }
@@ -149,44 +194,22 @@ namespace ModuleBased.Example.Drama
         public void OnInject()
         {
             // load current config value
-            AutoPlay = _configMod.LoadOrDefault<bool>(DIALOG_AUTO_PLAY, false);
-            AutoPlayDelay = _configMod.LoadOrDefault<float>(DIALOG_AUTO_PLAY_DELAY, 1.5f);
-            PlaySpeed = _configMod.LoadOrDefault<float>(DIALOG_PLAY_SPEED, 5);
-            EnableSkip = _configMod.LoadOrDefault<bool>(DIALOG_ENABLE_SKIP, false);
-            SkipSpeed = _configMod.LoadOrDefault<float>(DIALOG_SKIP_SPEED, 100f);
+            FastForwardSpeed = _configMod.LoadOrDefault<float>(DIALOG_FASTFORWARD_SPEED, 3f);
+            PlaySpeed = _configMod.LoadOrDefault<float>(DIALOG_PLAY_SPEED, 1f);
 
             // subscribe config event
-            _configMod.Subscribe<bool>(DIALOG_AUTO_PLAY, listen_AutoPlay);
-            _configMod.Subscribe<float>(DIALOG_AUTO_PLAY_DELAY, listen_AutoPlayDelay);
-            _configMod.Subscribe<float>(DIALOG_PLAY_SPEED, listen_DialogSpeed);
-            _configMod.Subscribe<bool>(DIALOG_ENABLE_SKIP, listen_EnableSkip);
-            _configMod.Subscribe<float>(DIALOG_SKIP_SPEED, listen_SkipSpeed);
-
-
+            _configMod.Subscribe<float>(DIALOG_FASTFORWARD_SPEED, listen_FastForwardSpeed);
+            _configMod.Subscribe<float>(DIALOG_PLAY_SPEED, listen_PlaySpeed);
         }
 
-        private void listen_AutoPlay(bool auto)
+        private void listen_PlaySpeed(float speed)
         {
-            AutoPlay = auto;
+            PlaySpeed = speed;
         }
 
-        private void listen_AutoPlayDelay(float delay)
+        private void listen_FastForwardSpeed(float speed)
         {
-            AutoPlayDelay = delay;
-        }
-
-        private void listen_DialogSpeed(float speed)
-        {
-
-        }
-
-        private void listen_EnableSkip(bool skip)
-        {
-
-        }
-
-        private void listen_SkipSpeed(float speed)
-        {
+            FastForwardSpeed = speed;
         }
         #endregion
 
@@ -203,11 +226,7 @@ namespace ModuleBased.Example.Drama
                 Destroy(gameObject);
                 return;
             }
-            _configMod.Unsubscribe<bool>(DIALOG_AUTO_PLAY, listen_AutoPlay);
-            _configMod.Unsubscribe<float>(DIALOG_AUTO_PLAY_DELAY, listen_AutoPlayDelay);
-            _configMod.Unsubscribe<float>(DIALOG_PLAY_SPEED, listen_DialogSpeed);
-            _configMod.Unsubscribe<bool>(DIALOG_ENABLE_SKIP, listen_EnableSkip);
-            _configMod.Unsubscribe<float>(DIALOG_SKIP_SPEED, listen_SkipSpeed);
+            _configMod.Unsubscribe<float>(DIALOG_FASTFORWARD_SPEED, listen_FastForwardSpeed);
         }
 
         private void OnDestroy()
@@ -223,6 +242,12 @@ namespace ModuleBased.Example.Drama
     {
         void Load(string dramaScript);
         void RegisterAction(string name, DramaActionHandler handler);
+
+        void CompleteOrNextState();
+
+        void BeginFastForward();
+
+        void EndFastForward();
     }
 
     public interface IPlayable
@@ -237,9 +262,13 @@ namespace ModuleBased.Example.Drama
     }
 
 
-    public interface IDramaState : IPlayable
+    public interface IDramaState : IPlayable, IDisposable
     {
         bool IsCompleted();
+
+        void Complete();
+
+        void SetTimeScale(float scale);
     }
 
     public class DramaState : IDramaState
@@ -252,8 +281,14 @@ namespace ModuleBased.Example.Drama
             _observables = new List<IDramaAction>(actions);
             if (_observables.Count < 1)
                 _isCompleted = true;
-            _observables.WhenAll().OnCompleted(() => _isCompleted = true);
+            _observables.WhenAll().OnCompleted(() =>
+            {
+                _isCompleted = true;
+            });
         }
+
+        private float _timeScale;
+        public float TimeScale { get => _timeScale; set => _timeScale = value; }
 
         public bool IsCompleted()
         {
@@ -267,7 +302,11 @@ namespace ModuleBased.Example.Drama
 
         public void Play()
         {
-            _observables.ForEach((a) => a?.Play());
+            _observables.ForEach((a) =>
+            {
+                a?.Play();
+                a.TimeScale = _timeScale;
+            });
         }
 
         public void Resume()
@@ -278,6 +317,22 @@ namespace ModuleBased.Example.Drama
         public void Stop()
         {
             _observables.ForEach((a) => a?.Stop());
+        }
+
+        public void Complete()
+        {
+            _observables.ForEach((a) => a?.Complete());
+        }
+
+        public void Dispose()
+        {
+            _observables.ForEach((a) => a.Dispose());
+        }
+
+        public void SetTimeScale(float scale)
+        {
+            _timeScale = scale;
+            _observables.ForEach((a) => a.TimeScale = _timeScale);
         }
     }
 }

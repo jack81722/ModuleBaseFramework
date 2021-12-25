@@ -47,7 +47,7 @@ namespace ModuleBased.Example.Drama
             return IsAlive(tween) && !tween.IsPlaying();
         }
 
-        public bool IsFinished(Tween tween)
+        public bool IsCompleted(Tween tween)
         {
             return IsAlive(tween) && tween.IsComplete();
         }
@@ -117,7 +117,7 @@ namespace ModuleBased.Example.Drama
 
         public Tween DoShake(float duration, float amptitude)
         {
-            var tween = transform.DOShakePosition(duration, strength: amptitude);
+            var tween = transform.DOShakePosition(duration, strength: amptitude).SetEase(Ease.Linear);
             AddTween(tween);
             return tween;
         }
