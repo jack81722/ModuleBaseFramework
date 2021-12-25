@@ -32,11 +32,6 @@ namespace ModuleBased.Example.Drama
             return _isPause;
         }
 
-        public void ModifySpeed(float speed)
-        {
-            _actions.ForEach(act => act.ModifySpeed(speed));
-        }
-
         public void Pause()
         {
             _isPause = true;
@@ -52,6 +47,11 @@ namespace ModuleBased.Example.Drama
         {
             _isPause = false;
             _actions.ForEach(act => act.Resume());
+        }
+
+        public void Stop()
+        {
+            _actions.ForEach(act => act.Stop());
         }
 
         public IDisposable Subscribe(IObserver<object> observer)

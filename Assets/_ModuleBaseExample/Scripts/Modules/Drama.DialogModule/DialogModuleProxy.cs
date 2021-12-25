@@ -37,6 +37,11 @@ namespace ModuleBased.Example.Drama.Dialog
             InvokeProxyMethod();
         }
 
+        public IDramaAction Say(string name, string content)
+        {
+            return (IDramaAction)InvokeProxyMethod(name, content);
+        }
+
         public void Stop()
         {
             InvokeProxyMethod();

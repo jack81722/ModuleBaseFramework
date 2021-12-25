@@ -39,5 +39,10 @@ namespace ModuleBased.Example.Drama.Dialog
         public string Name;
         public string Content;
         public string Padding;
+
+        public override string ToString()
+        {
+            return $"(Name:{Name}, Content:{Content}, Padding:{Padding})";
+        }
     }
 }

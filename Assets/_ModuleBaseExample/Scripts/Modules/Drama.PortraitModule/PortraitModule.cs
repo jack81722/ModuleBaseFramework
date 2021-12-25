@@ -19,7 +19,7 @@ namespace ModuleBased.Example.Drama.Portrait
         private IPortraitRepo _repo;
 
         [Inject]
-        private IDialogModule _dialogModule;
+        private IDramaModule _dramaModule;
         #endregion
 
         private Dictionary<string, PortraitAgent> _portraits;
@@ -105,7 +105,7 @@ namespace ModuleBased.Example.Drama.Portrait
 
         public void OnInject()
         {
-            _dialogModule.RegisterAction("NewPortrait", (args) =>
+            _dramaModule.RegisterAction("NewPortrait", (args) =>
             {
                 string id = args[0];
                 string src = args[1];
@@ -133,26 +133,26 @@ namespace ModuleBased.Example.Drama.Portrait
                 }
                 return NewPortrait(id, src, layout);
             });
-            _dialogModule.RegisterAction("ShakePortrait", (args) =>
+            _dramaModule.RegisterAction("ShakePortrait", (args) =>
             {
                 string id = args[0];
                 float duration = float.Parse(args[1]);
                 float strength = float.Parse(args[2]);
                 return ShakePortrait(id, duration, strength);
             });
-            _dialogModule.RegisterAction("FadeInPortrait", (args) =>
+            _dramaModule.RegisterAction("FadeInPortrait", (args) =>
             {
                 string id = args[0];
                 float duration = float.Parse(args[1]);
                 return FadeInPortrait(id, duration);
             });
-            _dialogModule.RegisterAction("FadeOutPortrait", (args) =>
+            _dramaModule.RegisterAction("FadeOutPortrait", (args) =>
             {
                 string id = args[0];
                 float duration = float.Parse(args[1]);
                 return FadeOutPortrait(id, duration);
             });
-            _dialogModule.RegisterAction("RemovePortrait", (args) =>
+            _dramaModule.RegisterAction("RemovePortrait", (args) =>
             {
                 string id = args[0];
                 return RemovePortrait(id);

@@ -24,7 +24,7 @@ namespace ModuleBased.Example
 
         bool ContainsKey(string key);
 
-        void Subcribe<T>(string key, Action<T> onChanged);
+        void Subscribe<T>(string key, Action<T> onChanged);
 
         void Unsubscribe<T>(string key, Action<T> onChanged);
     }

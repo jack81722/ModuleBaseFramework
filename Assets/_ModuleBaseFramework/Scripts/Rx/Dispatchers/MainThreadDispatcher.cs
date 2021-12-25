@@ -25,9 +25,9 @@ namespace ModuleBased.Rx
             }
         }
 
-        public static void SendStartCoroutine(IEnumerator coroutine, Action onCompleted = null, Action<Exception> onError = null)
+        public static Coroutine SendStartCoroutine(IEnumerator coroutine, Action onCompleted = null, Action<Exception> onError = null)
         {
-            singleton.StartCoroutine(singleton.InnerStartCoroutine(coroutine, onCompleted, onError));
+            return singleton.StartCoroutine(singleton.InnerStartCoroutine(coroutine, onCompleted, onError));
         }
 
         private IEnumerator InnerStartCoroutine(IEnumerator coroutine, Action onCompleted, Action<Exception> onError = null)
@@ -56,6 +56,11 @@ namespace ModuleBased.Rx
             {
                 onError?.Invoke(e);
             }
+        }
+
+        public static void SendStopCoroutine(Coroutine coroutine)
+        {
+            singleton.StopCoroutine(coroutine);
         }
     }
 }

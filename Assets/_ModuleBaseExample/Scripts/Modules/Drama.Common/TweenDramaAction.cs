@@ -42,9 +42,9 @@ namespace ModuleBased.Example.Drama
             return result;
         }
 
-        public void ModifySpeed(float speed)
+        public void ModifySpeed(float spdScale)
         {
-
+            _tween.timeScale = spdScale;
             return;
         }
 
@@ -62,6 +62,12 @@ namespace ModuleBased.Example.Drama
         {
             if (_tween.IsActive() && !_tween.IsPlaying())
                 _tween.Play();
+        }
+
+        public void Stop()
+        {
+            if (_tween.IsActive())
+                _tween.Kill();
         }
 
         public IDisposable Subscribe(IObserver<object> observer)

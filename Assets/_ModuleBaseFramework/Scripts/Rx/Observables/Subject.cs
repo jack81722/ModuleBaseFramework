@@ -73,6 +73,9 @@ namespace ModuleBased.Rx
             return _disposable;
         }
 
-
+        public void Clear()
+        {
+            _observers.Clear();
+        }
     }
 }

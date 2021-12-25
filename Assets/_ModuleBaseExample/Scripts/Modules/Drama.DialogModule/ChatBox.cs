@@ -22,19 +22,12 @@ namespace ModuleBased.Example.Drama.Dialog
 
         private string _name;
         private string _targetText;
-        private string _currentText {
-            get
-            {
-                if (_txtChat != null)
-                    return _txtChat.text;
-                return string.Empty;
-            }
-        }
         private float _speed = 1;
 
         [SerializeField]
         private Text _txtChat;
         private Tween _tween;
+        private Subject<ChatBox> _subject = new Subject<ChatBox>();
 
         public bool IsAlive()
         {
@@ -56,6 +49,7 @@ namespace ModuleBased.Example.Drama.Dialog
             if (destroyed)
                 return;
             Hide();
+            _subject.Clear();
             _pool.Push(this);
             killTween();
         }
@@ -72,12 +66,11 @@ namespace ModuleBased.Example.Drama.Dialog
             _txtChat.enabled = true;
         }
 
-        public void Set(string name, string text, float speed)
+        public void Set(string name, string text)
         {
             _name = name;
             _txtChat.text = "";
             _targetText = text;
-            _speed = speed;
         }
 
         private void killTween()
@@ -89,15 +82,6 @@ namespace ModuleBased.Example.Drama.Dialog
         }
 
         #region -- IDialogAction --
-        public void ModifySpeed(float speed)
-        {
-            killTween();
-            _tween = _txtChat
-                .DOText(_targetText, _targetText.Length / speed)
-                .SetEase(Ease.Linear)
-                .SetAutoKill(false);
-        }
-
         public void Play()
         {
             Display();
@@ -105,7 +89,6 @@ namespace ModuleBased.Example.Drama.Dialog
                 .DOText(_targetText, _targetText.Length / _speed)
                 .SetEase(Ease.Linear)
                 .SetAutoKill(false);
-            _tween.onComplete += OnCompleted;
             _tween.onUpdate += () => OnNext(this);
         }
         public void Resume()
@@ -117,6 +100,12 @@ namespace ModuleBased.Example.Drama.Dialog
         {
             _tween.Pause();
         }
+
+
+        public void Stop()
+        {
+            _tween.Kill();
+        }
         #endregion
 
         #region -- IPointerClickHandler --
@@ -124,6 +113,7 @@ namespace ModuleBased.Example.Drama.Dialog
         {
             if (IsFinished())
             {
+                OnCompleted();
                 Dispose();
             }
             if (!IsPause())
@@ -136,49 +126,24 @@ namespace ModuleBased.Example.Drama.Dialog
         
 
         #region -- IObservable --
-        private List<IObserver<ChatBox>> _observers = new List<IObserver<ChatBox>>();
-
         public IDisposable Subscribe(IObserver<ChatBox> observer)
         {
-            var disposable = new SingleAssignmentDisposable();
-            if (observer != null)
-                return disposable;
-            _observers.Add(observer);
-            return disposable;
+            return _subject.Subscribe(observer);
         }
 
         private void OnNext(ChatBox box)
         {
-            _observers.ForEach((o) =>
-            {
-                try
-                {
-                    o.OnNext(box);
-                }
-                catch (Exception e)
-                {
-                    OnError(e);
-                }
-            });
+            _subject.OnNext(box);
         }
 
         private void OnCompleted()
         {
-            _observers.ForEach((o) =>
-            {
-                try
-                {
-                    o.OnCompleted();
-                }
-                catch (Exception e)
-                {
-                    OnError(e);
-                }
-            });
+            _subject.OnCompleted();
         }
 
         private void OnError(Exception e)
         {
+            _subject.OnError(e);
             _view?.LogError(e);
         }
 
@@ -186,8 +151,6 @@ namespace ModuleBased.Example.Drama.Dialog
         {
             return Subscribe(new GenericObserver<ChatBox>(observer));
         }
-
-
         #endregion
     }
 }

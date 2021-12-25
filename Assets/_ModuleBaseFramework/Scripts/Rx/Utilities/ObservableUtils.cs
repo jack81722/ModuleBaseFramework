@@ -44,5 +44,11 @@ namespace ModuleBased.Rx
         {
             return new SelectObservable<T, TR>(source, selector);
         }
+
+        public static IObservable<T> OnCompleted<T>(this IObservable<T> source, Action onCompleted)
+        {
+            source.Subscribe(null, null, onCompleted);
+            return source;
+        }
     }
 }

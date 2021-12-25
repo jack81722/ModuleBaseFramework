@@ -10,7 +10,7 @@ namespace ModuleBased.Example.Drama.Dialog
     public class DialogView : MonoBehaviour
     {
         [Inject]
-        private IDialogModule _dialogMod;
+        private IDramaModule _dialogMod;
 
 
         public void ClickPlay()

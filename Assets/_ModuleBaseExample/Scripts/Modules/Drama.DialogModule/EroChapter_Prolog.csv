@@ -1,10 +1,13 @@
 Name,Content,Padding
-Action,"NewPortrait(1, misaki, L)
-ShakePortrait(1, 1, 1)","ChangeBg(Bg_Classroom, 0.5)"
-,,BGM(代用BGM_日常)
+,AAAAAAAAAAAAAA,"NewPortrait(1, misaki, L)
+NewPortrait(2, misaki, LM)
+NewPortrait(3, misaki, M)"
+,BBBBBBBBBBBBBBB,"ShakePortrait(1, 1, 1)
+BackgroundChange(1, 1, out)"
 ,XXXXXXXXXXX,"EnterPortrait(kohaku_02, 0, 0)"
 葵,XXXXXXXXXXXXXX,"ExitPortrait(kohaku_02, 0, 0.5)"
 ,XXXXXXXXXXXXXXXXX,
+,,Wait(1)
 ,XXXXXXXXXXXXXXXXXXXX,
 ,Prolog5,Voice(代用音效_鐘聲)
 ,Prolog6,StopVoice(代用音效_鐘聲)

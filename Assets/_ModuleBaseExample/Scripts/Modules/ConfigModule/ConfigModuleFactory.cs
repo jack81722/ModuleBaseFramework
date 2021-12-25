@@ -110,7 +110,7 @@ namespace ModuleBased.Example
                 return _table.ContainsKey(key);
             }
 
-            public void Subcribe<T>(string key, Action<T> onChanged)
+            public void Subscribe<T>(string key, Action<T> onChanged)
             {
                 var binding = SubjectBinding.NewBinding(key, onChanged);
                 if (!_bindings.TryGetValue(key, out List<SubjectBinding> list))

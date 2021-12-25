@@ -31,8 +31,8 @@ namespace ModuleBased.Example
             _slider.onValueChanged.AddListener((v) => _configMod.Save<float>("slider", v));
             _toggle.onValueChanged.AddListener((v) => _configMod.Save<bool>("toggle", v));
 
-            _configMod.Subcribe<float>("slider", (v) => _slider.value = v);
-            _configMod.Subcribe<bool>("toggle", (v) => _toggle.isOn = v);
+            _configMod.Subscribe<float>("slider", (v) => _slider.value = v);
+            _configMod.Subscribe<bool>("toggle", (v) => _toggle.isOn = v);
         }
 
         private void Update()

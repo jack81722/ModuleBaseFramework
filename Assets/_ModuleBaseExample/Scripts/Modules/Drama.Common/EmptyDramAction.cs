@@ -8,6 +8,8 @@ namespace ModuleBased.Example.Drama
 {
     public sealed class EmptyDramAction : IDramaAction
     {
+        Subject<object> _subject = new Subject<object>();
+
         public void Dispose() { }
 
         public bool IsFinished()
@@ -24,21 +26,26 @@ namespace ModuleBased.Example.Drama
 
         public void Pause() { }
 
-        public void Play() { }
-
-        public void Resume() { }
-
-        public IDisposable Subscribe(IObserver<object> observer)
+        public void Play() 
         {
             try
             {
-                observer.OnNext(new object());
-                observer.OnCompleted();
+                _subject.OnNext(new object());
+                _subject.OnCompleted();
             }
             catch (Exception e)
             {
-                observer.OnError(e);
+                _subject.OnError(e);
             }
+        }
+
+        public void Resume() { }
+
+        public void Stop() { }
+
+        public IDisposable Subscribe(IObserver<object> observer)
+        {
+            _subject.Subscribe(observer);
             return new SingleAssignmentDisposable();
         }
     }

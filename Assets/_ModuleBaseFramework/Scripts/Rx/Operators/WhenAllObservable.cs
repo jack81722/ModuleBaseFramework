@@ -53,6 +53,8 @@ namespace ModuleBased.Rx
             this.observer = observer;
             foreach(var source in _sources)
             {
+                if (source == null)
+                    continue;
                 composite.Add(source.Subscribe(this));
             }
             disposable = composite;
