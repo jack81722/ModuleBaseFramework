@@ -1,8 +1,10 @@
 Name,Content,Padding
-123,AAAAAAAAAAAAAA,"NewPortrait(1, misaki, L)
-NewPortrait(2, misaki, LM)
-NewPortrait(3, misaki, M)"
-456,BBBBBBBBBBBBBBB,"ShakePortrait(1, 10, 3)
+,,"CurtainAlphaLerp(0, 1, 0)
+CurtainRadialLerp(1, 0, 1)"
+123,AAAAAAAAAAAAAA,"PortraitNew(1, misaki, 1, L)
+PortraitNew(2, misaki, 1, LM)
+PortraitNew(3, misaki, 0.5, M)"
+456,BBBBBBBBBBBBBBB,"PortraitShake(1, 10, 3)
 BackgroundChange(1, 1, out)"
 ,XXXXXXXXXXX,"EnterPortrait(kohaku_02, 0, 0)"
 葵,XXXXXXXXXXXXXX,"ExitPortrait(kohaku_02, 0, 0.5)"

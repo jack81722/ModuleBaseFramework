@@ -14,6 +14,21 @@ namespace ModuleBased.Example.Drama
         private MaskableGraphic _graph;
         private List<Tween> _tweenList;
 
+        public Color Color { get => _graph.color; set => _graph.color = value; }
+
+        public float Alpha {
+            get
+            {
+                return _graph.color.a;
+            }
+            set
+            {
+                var color = _graph.color;
+                color.a = value;
+                _graph.color = color;
+            }
+        }
+
         #region -- Unity APIs --
         protected void Awake()
         {
@@ -83,7 +98,7 @@ namespace ModuleBased.Example.Drama
 
         public void PauseTweenAll()
         {
-            foreach(var tween in _tweenList)
+            foreach (var tween in _tweenList)
             {
                 tween.Play();
             }
@@ -91,7 +106,7 @@ namespace ModuleBased.Example.Drama
 
         public void ResumeTweenAll()
         {
-            foreach(var tween in _tweenList)
+            foreach (var tween in _tweenList)
             {
                 tween.Pause();
             }
@@ -99,7 +114,7 @@ namespace ModuleBased.Example.Drama
 
         public void Clear()
         {
-            foreach(var tween in _tweenList)
+            foreach (var tween in _tweenList)
             {
                 if (IsAlive(tween))
                 {
@@ -111,7 +126,7 @@ namespace ModuleBased.Example.Drama
 
         protected void AddTween(Tween tween)
         {
-            if(!_tweenList.Contains(tween))
+            if (!_tweenList.Contains(tween))
                 _tweenList.Add(tween);
         }
 
@@ -134,7 +149,7 @@ namespace ModuleBased.Example.Drama
         {
             if (_graph == null)
                 return null;
-            var tween = _graph.DOFade(alpha, duration).SetEase(Ease.Linear);
+            var tween = _graph.DOFade(alpha, duration);
             return tween;
         }
     }
